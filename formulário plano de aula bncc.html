@@ -1,0 +1,1203 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Formulário de Planejamento de Atividade - História</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; }
+    body { background: #eef1f5; color: #222; padding: 20px; }
+    .container { display: grid; grid-template-columns: 430px 1fr; gap: 20px; max-width: 1500px; margin: 0 auto; }
+    .form-panel, .preview-panel { background: #fff; border-radius: 12px; box-shadow: 0 4px 18px rgba(0,0,0,.08); padding: 20px; }
+    .form-panel { height: calc(100vh - 40px); overflow-y: auto; position: sticky; top: 20px; }
+    h1 { font-size: 20px; margin-bottom: 6px; color: #12335c; }
+    .subtitle { font-size: 13px; color: #666; margin-bottom: 16px; line-height: 1.4; }
+    fieldset { border: 1px solid #d8dde6; border-radius: 10px; padding: 14px; margin-bottom: 16px; }
+    legend { font-weight: bold; font-size: 14px; color: #12335c; padding: 0 6px; }
+    label { display: block; font-size: 13px; font-weight: bold; margin: 10px 0 5px; color: #333; }
+    input, select, textarea { width: 100%; border: 1px solid #cbd3df; border-radius: 8px; padding: 9px; font-size: 14px; background: #fff; }
+    textarea { min-height: 70px; resize: vertical; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .checkbox-grid { display: grid; grid-template-columns: 1fr; gap: 7px; margin-top: 8px; }
+    .check-item { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; line-height: 1.35; padding: 8px; background: #f7f9fc; border: 1px solid #e2e7f0; border-radius: 8px; }
+    .check-item input { width: auto; margin-top: 2px; }
+    .skill-box { margin-top: 10px; padding: 10px; border: 1px solid #dce2ec; border-radius: 10px; background: #f9fbfe; }
+    .skill-title { font-weight: bold; font-size: 13px; margin-bottom: 8px; color: #12335c; }
+    .hint { font-size: 12px; color: #666; line-height: 1.35; margin-top: 6px; }
+    .buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
+    button { border: none; border-radius: 8px; padding: 11px; font-weight: bold; cursor: pointer; font-size: 14px; }
+    .btn-primary { background: #12335c; color: #fff; }
+    .btn-secondary { background: #e4eaf3; color: #12335c; }
+    .btn-danger { background: #f3d8d8; color: #8a1f1f; grid-column: span 2; }
+    .page { width: 210mm; min-height: 297mm; background: #fff; margin: 0 auto 20px; padding: 16mm; box-shadow: 0 0 0 1px #ddd, 0 4px 20px rgba(0,0,0,.1); font-size: 12px; line-height: 1.35; }
+    .doc-header { text-align: center; font-weight: bold; font-size: 12px; line-height: 1.35; text-transform: uppercase; margin-bottom: 14px; }
+    .doc-title { text-align: center; font-weight: bold; margin: 14px 0; font-size: 13px; }
+    .doc-line { margin-bottom: 8px; }
+    .doc-label, .section-title { font-weight: bold; text-transform: uppercase; }
+    .line-fill { border-bottom: 1px solid #222; display: inline-block; min-width: 120px; padding: 0 4px; }
+    .wide-line { display: block; border-bottom: 1px solid #222; min-height: 18px; padding: 2px 4px; white-space: pre-wrap; }
+    .competencias { margin: 8px 0 10px; line-height: 1.6; }
+    .section { margin-top: 12px; }
+    .aula-box { margin-bottom: 10px; }
+    .placeholder { color: #777; }
+    @media (max-width: 1100px) { .container { grid-template-columns: 1fr; } .form-panel { position: relative; height: auto; top: 0; } .page { width: 100%; min-height: auto; } }
+    @media print {
+      body { background: #fff; padding: 0; }
+      .form-panel, .no-print { display: none !important; }
+      .container { display: block; max-width: none; }
+      .preview-panel { box-shadow: none; padding: 0; }
+      .page { width: 210mm; min-height: 297mm; box-shadow: none; margin: 0; page-break-after: always; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <aside class="form-panel no-print">
+      <h1>Planejamento de Atividade</h1>
+      <p class="subtitle">Selecione série, bimestre, unidade temática e objeto de conhecimento. As habilidades e metodologias do plano anual serão carregadas automaticamente.</p>
+
+      <fieldset>
+        <legend>Identificação</legend>
+        <label>Escola</label>
+        <input id="escola" type="text" placeholder="EMEF..." oninput="atualizarPreview()">
+        <label>Professor(a)</label>
+        <input id="professor" type="text" placeholder="Nome do professor" oninput="atualizarPreview()">
+        <div class="row">
+          <div><label>Ano/Série</label><select id="serie" onchange="carregarBimestres(); atualizarPreview();"><option value="">Selecione</option></select></div>
+          <div><label>Bimestre</label><select id="bimestre" onchange="carregarUnidades(); atualizarPreview();"><option value="">Selecione a série</option></select></div>
+        </div>
+        <div class="row">
+          <div><label>Duração</label><input id="duracao" type="text" placeholder="Ex: 2 aulas" oninput="atualizarPreview()"></div>
+          <div><label>Data</label><input id="data" type="date" onchange="atualizarPreview()"></div>
+        </div>
+        <div class="row">
+          <div><label>Nº alunos previstos</label><input id="previstos" type="number" min="0" oninput="atualizarPreview()"></div>
+          <div><label>Nº alunos presentes</label><input id="presentes" type="number" min="0" oninput="atualizarPreview()"></div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Dados do plano anual</legend>
+        <label>Componente Curricular</label>
+        <input id="componente" type="text" value="História" oninput="atualizarPreview()">
+        <label>Tema</label>
+        <input id="tema" type="text" placeholder="Tema da aula" oninput="atualizarPreview()">
+        <label>Unidade Temática</label>
+        <select id="unidade" onchange="carregarObjetos(); atualizarPreview();"><option value="">Selecione o bimestre</option></select>
+        <label>Objeto de Conhecimento</label>
+        <select id="objeto" onchange="carregarHabilidades(); atualizarPreview();"><option value="">Selecione a unidade temática</option></select>
+
+        <label>Habilidade BNCC da Computação</label>
+        <select id="computacaoSelect" onchange="aplicarMetodologiaPlugadaPorComputacao(); atualizarPreview()">
+          <option value="">Automático do plano anual</option>
+        </select>
+        <p class="hint">Os dados abaixo serão preenchidos automaticamente conforme o objeto selecionado. Você pode ajustar as metodologias nos campos de texto.</p>
+        <label>Habilidades disponíveis</label>
+        <div id="habilidadesArea"></div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Competências</legend>
+        <label>Competência Geral</label>
+        <div class="checkbox-grid" id="competenciasGerais"></div>
+        <label>Competência Específica</label>
+        <textarea id="competenciaEspecifica" placeholder="Digite a competência específica..." oninput="atualizarPreview()"></textarea>
+      </fieldset>
+
+      <fieldset>
+        <legend>Desenvolvimento</legend>
+        <label>Objetivos de Aprendizagem</label>
+        <textarea id="objetivos" placeholder="Digite os objetivos de aprendizagem..." oninput="atualizarPreview()"></textarea>
+        <label>Materiais a serem utilizados</label>
+        <textarea id="materiais" placeholder="Digite os materiais..." oninput="atualizarPreview()"></textarea>
+        <label>Procedimentos Metodológicos</label>
+        <textarea id="procedimentos" placeholder="Descreva as atividades, adequações, interações e intervenções..." oninput="atualizarPreview()"></textarea>
+        <label>Avaliação</label>
+        <textarea id="avaliacao" placeholder="Como verificar as habilidades e competências alcançadas?" oninput="atualizarPreview()"></textarea>
+      </fieldset>
+
+      <fieldset>
+        <legend>Decomposição da habilidade</legend>
+        <div id="aulasCampos"></div>
+      </fieldset>
+
+      <div class="buttons">
+        <button class="btn-primary" onclick="window.print()">Imprimir / PDF</button>
+        <button class="btn-secondary" onclick="exportarWord()">Gerar Word</button>
+        <button class="btn-danger" onclick="limparFormulario()">Limpar formulário</button>
+      </div>
+    </aside>
+
+    <main class="preview-panel">
+      <section class="page" id="documento">
+        <div class="doc-header">
+          PREFEITURA DE MARABÁ<br>
+          SECRETARIA MUNICIPAL DE EDUCAÇÃO<br>
+          DIRETORIA GERAL DE ENSINO - DIGEN<br>
+          DIRETORIA DE ENSINO URBANO – DEN<br>
+          COORDENADORIA DE SEGMENTO 6º AO 9º ANO
+        </div>
+        <div class="doc-title">ROTEIRO PARA PLANEJAMENTO DE ATIVIDADE</div>
+        <div id="previewConteudo"></div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const competencias = [
+      '1. Conhecimento', '2. Pensamento científico, crítico e criativo', '3. Repertório cultural', '4. Comunicação',
+      '5. Cultura digital', '6. Trabalho e projeto de vida', '7. Argumentação', '8. Autoconhecimento e autocuidado',
+      '9. Empatia e cooperação', '10. Responsabilidade e cidadania'
+    ];
+
+    const avaliacaoPadrao = `- Avaliação contínua e reflexiva, por meio de etapas de diagnósticos, análise e intervenção no processo de ensino e aprendizagem.
+
+- Como instrumentos de avaliação, podem ser utilizados:
+- Observação orientada;
+- Registro escrito ou digital;
+- Produção prática;
+- Discussão coletiva;
+- Atividade de síntese.`;
+
+    function h(codigo, texto) { return { codigo, texto }; }
+    function r(serie, bimestre, unidade, objeto, habilidades, computacao, desplugada, plugada, avaliacao = avaliacaoPadrao) {
+      return { serie, bimestre, unidade, objeto, habilidades, computacao, desplugada, plugada, avaliacao };
+    }
+
+    const habilidadesComputacao = {
+      '6º ano': [
+        ['EF06CO01', 'Classificar informações, agrupando-as em coleções (conjuntos) e associando cada coleção a um ‘tipo de dado’.'],
+        ['EF06CO02', 'Elaborar algoritmos que envolvam instruções sequenciais, de repetição e de seleção usando uma linguagem de programação.'],
+        ['EF06CO03', 'Descrever com precisão a solução de um problema, construindo o programa que implementa a solução descrita.'],
+        ['EF06CO04', 'Construir soluções de problemas usando a técnica de decomposição e automatizar tais soluções usando uma linguagem de programação.'],
+        ['EF06CO05', 'Identificar os recursos ou insumos necessários (entradas) para a resolução de problemas, bem como os resultados esperados (saídas), determinando os respectivos tipos de dados, e estabelecendo a definição de problema como uma relação entre entrada e saída.'],
+        ['EF06CO06', 'Comparar diferentes casos particulares (instâncias) de um mesmo problema, identificando as semelhanças e diferenças entre eles, e criar um algoritmo para resolver todos, fazendo uso de variáveis (parâmetros) para permitir o tratamento de todos os casos de forma genérica.'],
+        ['EF06CO07', 'Entender o processo de transmissão de dados, como a informação é quebrada em pedaços, transmitida em pacotes através de múltiplos equipamentos, e reconstruída no destino.'],
+        ['EF06CO08', 'Compreender e utilizar diferentes formas de armazenar, manipular, compactar e recuperar arquivos, documentos e metadados.'],
+        ['EF06CO09', 'Apresentar conduta e linguagem apropriadas ao se comunicar em ambiente digital, considerando a ética e o respeito.'],
+        ['EF06CO10', 'Analisar o consumo de tecnologia na sociedade, compreendendo criticamente o caminho da produção dos recursos bem como aspectos ligados à obsolescência e a sustentabilidade.']
+      ],
+      '7º ano': [
+        ['EF07CO01', 'Criar soluções de problemas para os quais seja adequado o uso de registros e matrizes unidimensionais para descrever suas informações e automatizá-las usando uma linguagem de programação.'],
+        ['EF07CO02', 'Analisar programas para detectar e remover erros, ampliando a confiança na sua correção.'],
+        ['EF07CO03', 'Construir soluções computacionais de problemas de diferentes áreas do conhecimento, de forma individual e colaborativa, selecionando as estruturas de dados e técnicas adequadas, aperfeiçoando e articulando saberes escolares.'],
+        ['EF07CO04', 'Explorar propriedades básicas de grafos.'],
+        ['EF07CO05', 'Criar algoritmos fazendo uso da decomposição e do reúso no processo de solução de forma colaborativa e cooperativa e automatizá-los usando uma linguagem de programação.'],
+        ['EF07CO06', 'Compreender o papel de protocolos para a transmissão de dados.'],
+        ['EF07CO07', 'Identificar problemas de segurança cibernética e experimentar formas de proteção.'],
+        ['EF07CO08', 'Demonstrar empatia sobre opiniões divergentes na web.'],
+        ['EF07CO09', 'Reconhecer e debater sobre cyberbullying.'],
+        ['EF07CO10', 'Identificar os impactos ambientais do descarte de peças de computadores e eletrônicos, bem como sua relação com a sustentabilidade.'],
+        ['EF07CO11', 'Criar, documentar e publicar, de forma individual ou colaborativa, produtos (vídeos, podcasts, web sites) usando recursos de tecnologia.']
+      ],
+      '8º ano': [
+        ['EF08CO01', 'Construir soluções de problemas usando a técnica de recursão e automatizar tais soluções usando uma linguagem de programação.'],
+        ['EF08CO02', 'Criar soluções de problemas para os quais seja adequado o uso de listas para descrever suas informações e automatizá-las usando uma linguagem de programação, empregando ou não a recursão como uma técnica de resolver o problema.'],
+        ['EF08CO03', 'Utilizar algoritmos clássicos de manipulação sobre listas.'],
+        ['EF08CO04', 'Construir soluções computacionais de problemas de diferentes áreas do conhecimento, de forma individual e colaborativa, selecionando as estruturas de dados e técnicas adequadas, aperfeiçoando e articulando saberes escolares.'],
+        ['EF08CO05', 'Compreender os conceitos de paralelismo, concorrência e armazenamento/processamento distribuídos.'],
+        ['EF08CO06', 'Entender como é a estrutura e funcionamento da internet.'],
+        ['EF08CO07', 'Compartilhar informações por meio de redes sociais, compreendendo a sua dinâmica de funcionamento, de forma responsável e avaliando sua confiabilidade, considerando o respeito e a ética.'],
+        ['EF08CO08', 'Distinguir os tipos de dados pessoais que são solicitados em espaços digitais e os riscos associados.'],
+        ['EF08CO09', 'Analisar criticamente as políticas de termos de uso das redes sociais e demais plataformas.'],
+        ['EF08CO10', 'Discutir questões sobre segurança e privacidade relacionadas ao uso dos ambientes virtuais.'],
+        ['EF08CO11', 'Avaliar a precisão, relevância, adequação, abrangência e vieses que ocorrem em fontes de informação eletrônica.']
+      ],
+      '9º ano': [
+        ['EF09CO01', 'Criar soluções de problemas para os quais seja adequado o uso de árvores e grafos para descrever suas informações e automatizá-las usando uma linguagem de programação.'],
+        ['EF09CO02', 'Construir soluções computacionais de problemas de diferentes áreas do conhecimento, de forma individual e colaborativa, selecionando as estruturas de dados e técnicas adequadas, aperfeiçoando e articulando saberes escolares.'],
+        ['EF09CO03', 'Usar autômatos para descrever comportamentos de forma abstrata automatizando-os através de uma linguagem de programação baseada em eventos.'],
+        ['EF09CO04', 'Compreender o funcionamento de malwares e outros ataques cibernéticos.'],
+        ['EF09CO05', 'Analisar técnicas de criptografia para armazenamento e transmissão de dados.'],
+        ['EF09CO06', 'Analisar problemas sociais de sua cidade e estado a partir de ambientes digitais, propondo soluções.'],
+        ['EF09CO07', 'Avaliar aplicações e implicações políticas, socioambientais e culturais das tecnologias digitais para propor alternativas aos desafios do mundo contemporâneo, incluindo aqueles relativos ao mundo do trabalho.'],
+        ['EF09CO08', 'Discutir como a distribuição desigual de recursos de computação em uma economia global levanta questões de equidade, acesso e poder.'],
+        ['EF09CO09', 'Criar ou utilizar conteúdo em meio digital, compreendendo questões éticas relacionadas a direitos autorais e de uso de imagem.'],
+        ['EF09CO10', 'Avaliar a veracidade, credibilidade e relevância da informação em seus diferentes formatos, sendo capaz de identificar o propósito pelo qual foi disseminada.']
+      ],
+      '6º ao 9º ano': [
+        ['EF69CO01', 'Classificar informações, agrupando-as em coleções (conjuntos) e associando cada coleção a um ‘tipo de dado’.'],
+        ['EF69CO02', 'Elaborar algoritmos que envolvam instruções sequenciais, de repetição e de seleção usando uma linguagem de programação.'],
+        ['EF69CO03', 'Descrever com precisão a solução de um problema, construindo o programa que implementa a solução descrita.'],
+        ['EF69CO04', 'Construir soluções de problemas usando a técnica de decomposição e automatizar tais soluções usando uma linguagem de programação.'],
+        ['EF69CO05', 'Identificar os recursos ou insumos necessários (entradas) para a resolução de problemas, bem como os resultados esperados (saídas), determinando os respectivos tipos de dados, e estabelecendo a definição de problema como uma relação entre entrada e saída.'],
+        ['EF69CO06', 'Comparar diferentes casos particulares (instâncias) de um mesmo problema, identificando as semelhanças e diferenças entre eles, e criar um algoritmo para resolver todos, fazendo uso de variáveis (parâmetros) para permitir o tratamento de todos os casos de forma genérica.'],
+        ['EF69CO07', 'Entender o processo de transmissão de dados, como a informação é quebrada em pedaços, transmitida em pacotes através de múltiplos equipamentos, e reconstruída no destino.'],
+        ['EF69CO08', 'Compreender e utilizar diferentes formas de armazenar, manipular, compactar e recuperar arquivos, documentos e metadados.'],
+        ['EF69CO09', 'Compreender os conceitos de paralelismo, concorrência e armazenamento/processamento distribuídos.'],
+        ['EF69CO10', 'Entender como é a estrutura e funcionamento da internet.'],
+        ['EF69CO11', 'Apresentar conduta e linguagem apropriadas ao se comunicar em ambiente digital, considerando a ética e o respeito.'],
+        ['EF69CO12', 'Analisar o consumo de tecnologia na sociedade, compreendendo criticamente o caminho da produção dos recursos bem como aspectos ligados à obsolescência e a sustentabilidade.']
+      ]
+    };
+
+    const registrosPlano = [
+      // 6º ANO - 1º BIMESTRE
+      r('6º ano','1º bimestre','Construindo conceitos em História.','O que é história?; Processos históricos; Noções de tempo e espaço históricos; Cartografia Social; Povos Indígenas na região de Marabá.',[h('EF06HI01','Identificar diferentes formas de compreensão da noção de tempo e de periodização dos processos históricos (continuidades e rupturas).')],'(EF06CO01) Classificar informações, agrupando-as em coleções (conjuntos) e associando cada coleção a um tipo de dados.',`→ Apresentação de diferentes noções de tempo (natural, histórico e cultural)
+→ Explicação sobre periodização, continuidades e rupturas
+→ Análise de exemplos históricos
+→ Registro das conclusões`,`→ Construção de linha do tempo multimodal (Padlet)
+→ Organização dos períodos históricos
+→ Atividade interativa no Curipod ou Wayground`),
+      r('6º ano','1º bimestre','Construindo conceitos em História.','Grupos sociais existentes na região, localidade, assentamento e território.',[h('EF06HI02MB','Identificar os grupos sociais existente na sua região ou (localidade) assentamento e o território;')],'(EF06CO01) Classificar informações, agrupando-as em coleções (conjuntos) e associando cada coleção a um tipo de dados.',`→ Levantamento dos grupos sociais da região
+→ Discussão sobre organização do território
+→ Leitura de textos e imagens locais
+→ Registro das informações`,`→ Pesquisa em fontes digitais sobre a região
+→ Organização em mapas ou slides
+→ Produção de painel interativo no Padlet`),
+      r('6º ano','1º bimestre','Construindo conceitos em História.','História oral da comunidade como fonte histórica.',[h('EF06HI03MB','Reconhecer a história oral da comunidade como fonte histórica para a construção de uma história local;')],'(EF06CO01) Classificar informações, agrupando-as em coleções (conjuntos) e associando cada coleção a um tipo de dados.',`→ Coleta de relatos orais da comunidade
+→ Discussão sobre memória e história
+→ Registro e organização das narrativas
+→ Apresentação oral`,`→ Classificação dos relatos (oral, escrito, visual)
+→ Organização das informações em tabela ou esquema (Canva ou slides)
+→ Agrupamento das narrativas por tema ou origem
+→ Produção de mural digital no Padlet
+→ Atividade interativa de revisão no Wayground ou Curipod
+→ Socialização dos resultados`),
+      r('6º ano','1º bimestre','Construindo conceitos em História.','História de vida: passado e presente.',[h('EF06HI04MB','Descrever sua própria História de vida (passado e presente).')],'(EF06CO01) Classificar informações, agrupando-as em coleções (conjuntos) e associando cada coleção a um tipo de dados.',`→ Produção de relato autobiográfico
+→ Construção de linha do tempo pessoal
+→ Apresentação oral`,`→ Organização dos eventos em categorias (infância, escola, família)
+→ Classificação das informações por período
+→ Construção de linha do tempo em formato estruturado (Canva ou slides)
+→ Produção de painel digital no Padlet
+→ Atividade interativa no Curipod ou Wayground
+→ Socialização dos resultados`),
+      r('6º ano','1º bimestre','Construindo conceitos em História.','Periodização histórica. O trabalho do historiador: os sujeitos históricos e o valor das fontes históricos.',[h('EF06HI02','Identificar a gênese da produção do saber histórico e analisar o significado das fontes que originaram determinadas formas de registro em sociedades e épocas distintas.')],'(EF06CO04) Construir soluções de problemas usando a técnica de decomposição e automatizar tais soluções usando uma linguagem de programação.',`→ Apresentação e análise de fontes históricas (orais, escritas, visuais)
+→ Identificação da gênese das fontes
+→ Classificação e interpretação
+→ Produção de painel físico`,`→ Decomposição das fontes históricas em partes (tipo, origem, finalidade)
+→ Construção de roteiro padrão para análise de fontes digitais
+→ Uso de IAs que fornecem automaticamente fontes históricas confiáveis
+→ Organização das informações em esquema padronizado (categorias no Padlet ou slides)`),
+      r('6º ano','1º bimestre','Construindo conceitos em História.','Conhecendo as histórias de Marabá.',[h('EF06HI01MB','Conhecer as diferentes narrativas históricas relacionadas à fundação da cidade de Marabá.')],'(EF06CO04) Construir soluções de problemas usando a técnica de decomposição e automatizar tais soluções usando uma linguagem de programação.',`→ Apresentação de narrativas sobre a fundação de Marabá
+→ Comparação entre versões
+→ Identificação de autores e fontes
+→ Registro das conclusões`,`→ Decomposição das narrativas em elementos (autor, versão, contexto histórico)
+→ Criação de roteiro estruturado para comparação das narrativas
+→ Uso de IAs que fornecem automaticamente fontes históricas confiáveis sobre Marabá
+→ Organização das informações em estrutura comparativa padronizada`),
+      r('6º ano','1º bimestre','Construindo conceitos em História.','Povos indígenas de Marabá e suas narrativas históricas.',[h('EF06HI05MB','Compreender a história do sudeste do Pará na versão dos povos indígenas da região, as suas noções de tempo, periodização e formas de registro.')],'(EF06CO01) Classificar informações, agrupando-as em coleções (conjuntos) e associando cada coleção a um tipo de dados.',`→ Apresentação de narrativas indígenas da região
+→ Discussão sobre tempo, memória e formas de registro
+→ Comparação de visões históricas
+→ Registro das conclusões`,`→ Pesquisa de narrativas indígenas em fontes digitais
+→ Organização das informações em slides ou áudio
+→ Produção de síntese digital
+→ Uso de vídeo ou Curipod para discussão`),
+
+      // 6º ANO - 2º BIMESTRE
+      r('6º ano','2º bimestre','A origem da humanidade, deslocamentos e concepções.','Diferentes teorias sobre o surgimento do mundo e da humanidade: evolucionismo, criacionismos, outras narrativas como: Sopro de Tupã, Guarani, Criação do mundo segundo a tradição Yorubá.',[h('EF06HI03','Identificar as hipóteses científicas sobre o surgimento da espécie humana e sua historicidade e analisar os significados dos mitos de fundação.')],'(EF06CO01) Classificar informações, agrupando-as em coleções (conjuntos) e associando cada coleção a um tipo de dados.',`→ Apresentação de narrativas (científicas e mitológicas)
+→ Comparação entre criacionismo e evolucionismo
+→ Discussão dos significados dos mitos
+→ Registro das conclusões`,`→ Classificação das narrativas (científica, religiosa, cultural)
+→ Organização das informações em linha do tempo multimodal no Padlet
+→ Atividade interativa no Curipod ou Wayground`),
+      r('6º ano','2º bimestre','A origem da humanidade, deslocamentos e concepções.','África, a matriz da vida.',[h('EF06HI0305MB','Identificar o continente africano como berço da humanidade.')],'(EF06CO01) Classificar informações, agrupando-as em coleções (conjuntos) e associando cada coleção a um tipo de dados.',`→ Apresentação da África como origem da humanidade
+→ Análise de mapas e registros históricos
+→ Discussão sobre deslocamentos humanos
+→ Registro das aprendizagens`,`→ Classificação das informações em categorias (ex.: origem, deslocamento, cultura)
+→ Organização das informações em grupos no Padlet (coleções de dados)
+→ Agrupamento de mapas digitais por tipo de informação (rotas, regiões, povos)
+→ Atividade interativa de classificação no Wayground`),
+      r('6º ano','2º bimestre','A origem da humanidade, deslocamentos e concepções.','As teorias sobre a origem do homem americano e o povoamento da América.',[h('EF06HI04','Conhecer as teorias sobre a origem do homem americano.')],'(EF06CO01) Classificar informações, agrupando-as em coleções (conjuntos) e associando cada coleção a um tipo de dados.',`→ Apresentação das teorias (Bering, etc.)
+→ Análise de evidências arqueológicas
+→ Comparação entre teorias
+→ Registro das conclusões`,`→ Classificação das teorias em categorias
+→ Organização em tabela comparativa
+→ Produção de esquema em slides`),
+      r('6º ano','2º bimestre','A origem da humanidade, deslocamentos e concepções.','Rotas de povoamento no território americano.',[h('EF06HI06','Identificar geograficamente as rotas de povoamento no território americano.')],'(EF06CO04) Construir soluções de problemas usando a técnica de decomposição e automatizar tais soluções usando uma linguagem de programação.',`→ Identificação das rotas em mapas
+→ Discussão sobre deslocamentos humanos
+→ Registro das aprendizagens`,`→ Organização das rotas em mapa digital
+→ Decomposição das etapas do povoamento
+→ Produção de esquema ou linha do tempo`),
+      r('6º ano','2º bimestre','A origem da humanidade, deslocamentos e concepções.','Comunidades indígenas e africanas e a relação entre cultura e natureza.',[h('EF06HI05','Descrever modificações da natureza e da paisagem realizadas por diferentes tipos de sociedade, com destaque para os povos indígenas originários e povos africanos, e discutir a natureza e a lógica das transformações ocorridas.')],'(EF06CO06) Comparar diferentes casos particulares (instâncias) de um mesmo problema, identificando as semelhanças e diferenças entre eles, e criar um algoritmo para resolver todos, fazendo uso de variáveis (parâmetros) para permitir o tratamento de todos os casos de forma genérica.',`→ Análise de textos e imagens
+→ Comparação entre povos indígenas e africanos
+→ Discussão sobre transformação da paisagem
+→ Registro das conclusões`,`→ Comparação de casos em tabela
+→ Identificação de padrões
+→ Organização das informações em esquema
+→ Produção em slides`),
+      r('6º ano','2º bimestre','A origem da humanidade, deslocamentos e concepções.','Modos de vida das comunidades indígenas e vazanteiras no sudeste do Pará.',[h('EF06HI03MB','Identificar e conhecer os povos indígenas e comunidades vazanteiras da região sudeste do Pará, suas expressões culturais, formas de registro e as distintas relações mantidas com a natureza.')],'(EF06CO01) Classificar informações, agrupando-as em coleções (conjuntos) e associando cada coleção a um tipo de dados.',`→ Apresentação dos modos de vida
+→ Comparação das relações com a natureza
+→ Discussão com base em texto (Professor Aldair)
+→ Registro das conclusões`,`→ Organização das informações em esquema comparativo
+→ Produção de slides (Canva)
+→ Painel no Padlet
+→ Atividade interativa (Wayground ou Curipod)`),
+
+      // 6º ANO - 3º BIMESTRE
+      r('6º ano','3º bimestre','Civilizações antigas e suas formas de registro.','Civilizações da África Antiga e a tradição oral; Civilizações Mesopotâmica, Hebraica, Fenícia e Persa.',[h('EF06HI07','Identificar aspectos e formas de registro das sociedades antigas na África, no Oriente Médio e nas Américas, distinguindo alguns significados presentes na cultura material e na tradição oral dessas sociedades.')],'(EF06CO01) Classificar informações, agrupando-as em coleções (conjuntos) e associando cada coleção a um tipo de dados.',`→ Apresentação das civilizações antigas (África, Oriente Médio e Américas)
+→ Análise das formas de registro (oral, escrita, material)
+→ Discussão sobre significados culturais
+→ Registro das conclusões`,`→ Classificação das formas de registro (oral, escrita, visual)
+→ Organização das informações em tabela ou esquema (Canva ou slides)
+→ Produção de painel digital (Padlet)
+→ Atividade interativa no Wayground ou Curipod`),
+      r('6º ano','3º bimestre','Civilizações antigas e suas formas de registro.','As civilizações da América Pré-Colombianas e índios do Brasil: relações de territorialidades.',[h('EF06HI08','Identificar os espaços territoriais ocupados e os aportes culturais, científicos, sociais e econômicos dos astecas, maias e incas e dos povos indígenas de diversas regiões brasileiras.')],'(EF06CO05) Identificar os recursos ou insumos necessários (entradas) para a resolução de problemas, bem como os resultados esperados (saídas), determinando os respectivos tipos de dados, e estabelecendo a definição de problema como uma relação entre entrada e saída.',`→ Apresentação dos povos (astecas, maias, incas e indígenas brasileiros)
+→ Análise dos territórios e contribuições culturais
+→ Discussão sobre organização social
+→ Registro das aprendizagens`,`→ Organização das informações em mapa ou esquema
+→ Comparação entre os povos em tabela
+→ Produção de diálogo no Scratch`),
+      r('6º ano','3º bimestre','Civilizações antigas e suas formas de registro.','Comunidades indígenas e vazanteiras e da floresta no sudeste do Pará.',[h('EF06HI04MB','Identificar os espaços territoriais ocupados, as formas de registro, os saberes e as técnicas de sobrevivência das comunidades indígenas e vazanteiras no sudeste do Pará.')],'(EF06CO01) Classificar informações, agrupando-as em coleções (conjuntos) e associando cada coleção a um tipo de dados.',`→ Apresentação dos modos de vida e territórios
+→ Discussão sobre saberes e técnicas de sobrevivência
+→ Análise das formas de registro
+→ Registro das conclusões`,`→ Organização das informações em esquema comparativo
+→ Classificação das práticas culturais
+→ Produção de painel digital (Padlet)
+→ Atividade interativa no Curipod ou Wayground`),
+
+      // 6º ANO - 4º BIMESTRE
+      r('6º ano','4º bimestre','Trabalho, organização social e política em diferentes tempos e espaços.','Cultura, cidadania, organização política e território na Grécia e Roma Antigas.',[h('EF06HI09','Discutir o conceito de Antiguidade Clássica, seu alcance e limite na tradição ocidental, assim como os impactos sobre outras sociedades e culturas.')],'(EF06CO04) Construir soluções de problemas usando a técnica de decomposição e automatizar tais soluções usando uma linguagem de programação.',`→ Apresentação do conceito de Antiguidade Clássica
+→ Discussão sobre limites e impactos
+→ Registro das conclusões`,`→ Produção de imagens históricas com Gemini
+→ Criação de cenário imersivo no Skybox
+→ Organização das ideias em esquema simples
+→ Produzir um cenário histórico no Scratch`),
+      r('6º ano','4º bimestre','Trabalho, organização social e política em diferentes tempos e espaços.','A formação política, social e territorial da Grécia Antiga: a formação da Pólis.',[h('EF06HI10','Explicar a formação da Grécia Antiga, com ênfase na formação da Pólis e nas transformações políticas, sociais e culturais.')],'(EF06CO04) Construir soluções de problemas usando a técnica de decomposição e automatizar tais soluções usando uma linguagem de programação.',`→ Apresentação da formação da Grécia Antiga
+→ Discussão sobre a pólis
+→ Registro das aprendizagens`,`→ Criação de cenário da pólis no Skybox
+→ Produção de imagens no Gemini
+→ Debate guiado com base nas imagens
+→ Produzir diálogo no Scratch com sistema de marcação de ponto das respostas`),
+      r('6º ano','4º bimestre','Trabalho, organização social e política em diferentes tempos e espaços.','A formação política, social e territorial da Roma Antiga: Monarquia e República.',[h('EF06HI11','Caracterizar o processo de formação da Roma Antiga e suas configurações sociais e políticas nos períodos monárquico e republicano.'),h('EF06HI12','Associar o conceito de cidadania à dinâmica de inclusão e exclusão na Grécia e Roma antigas.')],'(EF06CO01) Classificar informações, agrupando-as em coleções (conjuntos) e associando cada coleção a um tipo de dados. / (EF06CO06) Comparar diferentes casos particulares.',`→ Apresentação da formação de Roma
+→ Discussão sobre Monarquia e República
+→ Discussão sobre cidadania
+→ Análise de inclusão e exclusão
+→ Registro das conclusões`,`→ Produção de imagens no Gemini
+→ Classificação das fases de Roma em tabela simples
+→ Produção de vídeo curto
+→ Comparação entre Grécia e Roma em tabela
+→ Produção de imagens representativas
+→ Construção de uma regra geral ou modelo explicativo`),
+      r('6º ano','4º bimestre','Trabalho, organização social e política em diferentes tempos e espaços.','O conceito de cidadania na Grécia e na Roma Antigas.',[h('EF06HI13','Conceituar império no mundo antigo, com vistas à análise das diferentes formas de equilíbrio e desequilíbrio entre as partes envolvidas.')],'(EF06CO04) Construir soluções de problemas usando a técnica de decomposição e automatizar tais soluções usando uma linguagem de programação.',`→ Apresentação do conceito de império
+→ Discussão sobre relações de poder
+→ Registro das aprendizagens`,`→ Decomposição do conceito de império em elementos (território, poder político, dominação e relações sociais)
+→ Construção de roteiro estruturado para análise de diferentes impérios
+→ Uso do Chat de IA para gerar automaticamente descrições de impérios a partir de comandos padronizados
+→ Organização das informações em esquema padronizado no Padlet`),
+      r('6º ano','4º bimestre','Trabalho, organização social e política em diferentes tempos e espaços.','Política e cidadania na vida cotidiana local.',[h('EF06HI05MB','Comparar as dinâmicas políticas e sociais local e regional às formações sociais e políticas gregas e romanas clássicas.')],'(EF06CO06) Comparar diferentes casos particulares (instâncias) de um mesmo problema, identificando semelhanças e diferenças entre eles.',`→ Comparação entre realidade local e sociedades antigas
+→ Discussão sobre dinâmicas sociais
+→ Registro das conclusões`,`→ Produção de imagens comparativas (local x antigo) no Gemini
+→ Construção de uma regra geral ou modelo explicativo a partir dos padrões identificados
+→ Organização em tabela simples`),
+      r('6º ano','4º bimestre','Trabalho, organização social e política em diferentes tempos e espaços.','Contatos entre povos e culturas em diferentes espaços e tempos.',[h('EF06HI14','Identificar e analisar diferentes formas de contato, adaptação ou exclusão entre populações em diferentes tempos e espaços.')],'(EF06CO04) Construir soluções de problemas usando a técnica de decomposição e automatizar tais soluções usando uma linguagem de programação.',`→ Análise de contatos entre povos
+→ Discussão sobre adaptação e exclusão
+→ Registro das conclusões`,`→ Decomposição das formas de relação entre populações (contato, adaptação e exclusão)
+→ Organização dessas relações em etapas de análise
+→ Construção de um roteiro padrão
+→ Uso de IA para gerar exemplos de relações entre populações a partir de comandos estruturados`),
+      r('6º ano','4º bimestre','Trabalho, organização social e política em diferentes tempos e espaços.','O Mediterrâneo: possibilidades de interconexão, formação, trocas culturais e sociabilidades.',[h('EF06HI15','Descrever as dinâmicas de circulação de pessoas, produtos e culturas no Mediterrâneo e seu significado.')],'(EF06CO05) Identificar os recursos ou insumos necessários (entradas) e resultados esperados (saídas).',`→ Estudo do Mediterrâneo
+→ Discussão sobre trocas culturais
+→ Registro das aprendizagens`,`→ Identificação das entradas (rotas, produtos, povos) e saídas (trocas culturais e econômicas)
+→ Criação de cenário do Mediterrâneo no Skybox
+→ Organização das rotas em esquema simples`),
+      r('6º ano','4º bimestre','Trabalho, organização social e política em diferentes tempos e espaços.','A bacia Araguaia-Tocantins e o desenvolvimento do sudeste do Pará.',[h('EF06HI06MB','Compreender a importância dos rios Tocantins e Araguaia na dinâmica de sociabilidade e produção cultural no sudeste do Pará.')],'(EF06CO05) Identificar os recursos ou insumos necessários (entradas) para a resolução de problemas, bem como os resultados esperados (saídas).',`→ Discussão sobre a importância dos rios Tocantins e Araguaia
+→ Análise das relações sociais e culturais na região
+→ Estudo da dinâmica local
+→ Registro das conclusões`,`→ Produção de imagens da região usando IA generativa (Gemini)
+→ Criação de mural temático no Padlet com categorias
+→ Construção de jogo simples no Padlet Arcade
+→ Elaboração de legenda descritiva para cada imagem`),
+      r('6º ano','4º bimestre','Trabalho, organização social e política em diferentes tempos e espaços.','A colonização da região sudeste do Pará e a construção dos grupos nativos.',[h('EF06HI07MB','Compreender a dinâmica de reocupação do sudeste do Pará, a construção dos grupos nativos no decorrer do processo de colonização da região e os olhares estereotipados sobre esses grupos atualmente.')],'(EF06CO04) Construir soluções de problemas usando a técnica de decomposição e automatizar tais soluções usando uma linguagem de programação.',`→ Apresentação da reocupação do sudeste do Pará
+→ Análise da formação dos grupos nativos
+→ Discussão sobre estereótipos históricos
+→ Registro das conclusões`,`→ Decomposição do processo em etapas
+→ Aplicação de prompt em IAs para gerar rostos e discutir estereótipos
+→ Organização das informações em esquema padronizado`),
+      r('6º ano','4º bimestre','Trabalho, organização social e política em diferentes tempos e espaços.','Formas de escravidão, servidão e trabalho livre em diferentes tempos e espaços históricos.',[h('EF06HI16','Caracterizar e comparar as dinâmicas de abastecimento e as formas de organização do trabalho e da vida social em diferentes sociedades e períodos, com destaque para as relações entre senhores e servos.')],'(EF06CO06) Comparar diferentes casos particulares de um mesmo problema e criar um algoritmo para resolver todos.',`→ Apresentação das formas de trabalho em diferentes sociedades
+→ Análise das relações entre senhores e servos
+→ Comparação entre períodos históricos
+→ Construção de uma regra geral ou modelo explicativo`,`→ Geração de imagens dos sistemas de trabalho (Gemini)
+→ Organização das formas de trabalho no Padlet
+→ Classificação por tipo de relação social
+→ Jogo no Padlet Arcade`),
+      r('6º ano','4º bimestre','Trabalho, organização social e política em diferentes tempos e espaços.','Escravidão, servidão e trabalho livre.',[h('EF06HI17','Diferenciar escravidão, servidão e trabalho livre no mundo antigo.')],'(EF06CO01) Classificar informações, agrupando-as em coleções (conjuntos) e associando cada coleção a um tipo de dados.',`→ Diferenciação entre escravidão, servidão e trabalho livre
+→ Análise das características de cada sistema
+→ Registro das aprendizagens`,`→ Geração de imagens representando cada tipo de trabalho (Gemini)
+→ Classificação das informações no Padlet
+→ Organização em categorias
+→ Jogo no Padlet Arcade`),
+      r('6º ano','4º bimestre','Trabalho, organização social e política em diferentes tempos e espaços.','A influência política e social da igreja católica na Europa Medieval.',[h('EF06HI18','Analisar o papel da religião cristã na cultura e nos modos de organização social no período medieval.')],'(EF06CO04) Construir soluções de problemas usando a técnica de decomposição e automatizar tais soluções usando uma linguagem de programação.',`→ Apresentação do papel da Igreja medieval
+→ Análise da influência na cultura e sociedade
+→ Registro das conclusões`,`→ Decomposição do papel da religião em elementos
+→ Construção de roteiro estruturado para análise do período medieval
+→ Uso de IA para gerar explicações
+→ Organização das informações em esquema padronizado`),
+      r('6º ano','4º bimestre','Trabalho, organização social e política em diferentes tempos e espaços.','O papel da mulher no mundo antigo, medieval e em outros tempos.',[h('EF06HI19','descrever e analisar os diferentes papéis sociais das mulheres no mundo antigo e nas sociedades medievais.')],'(EF06CO06) Comparar diferentes casos particulares (instâncias) de um mesmo problema, identificando semelhanças e diferenças entre eles.',`→ Discussão sobre os papéis sociais das mulheres
+→ Análise em diferentes períodos históricos
+→ Registro das conclusões`,`→ Geração de imagens (Gemini) de mulheres em diferentes contextos históricos
+→ Construção de uma regra geral ou modelo explicativo
+→ Comparação entre períodos
+→ Jogo no Padlet Arcade`),
+
+      // 7º ANO - 1º BIMESTRE
+      r('7º ano','1º bimestre','Sociedades africanas, americanas e europeias no contexto das navegações.','A construção da ideia de “modernidade”.',[h('EF07HI01','Explicar o significado de “modernidade” e suas lógicas de inclusão e exclusão, com base em uma concepção europeia.')],'(EF07CO08) Demonstrar empatia sobre opiniões divergentes na web.',`→ Aula expositiva dialogada sobre “modernidade”
+→ Leitura de texto comparando inclusão e exclusão
+→ Debate guiado: “quem ficou de fora da modernidade?”
+→ Produção de esquema no caderno (inclusão x exclusão)`,`→ Criação de mural no Padlet com opiniões dos alunos
+→ Simulação de comentários
+→ Análise de respeito/empatia nas interações`),
+      r('7º ano','1º bimestre','Sociedades africanas, americanas e europeias no contexto das navegações.','A dinâmica das navegações entre os séculos XIV e XVI: contatos, interações e trocas de costumes.',[h('EF07HI02','Identificar conexões e interações entre as sociedades do Novo Mundo, da Europa, da África e da Ásia no contexto das navegações e indicar a complexidade e as interações que ocorrem nos Oceanos Atlântico, Índico e Pacífico.')],'(EF07CO04) Explorar propriedades básicas de grafos.',`→ Análise de mapa das navegações
+→ Atividade com setas ligando continentes
+→ Discussão sobre trocas culturais e comerciais`,`→ Construção de mapa digital interativo
+→ Representação das rotas como rede
+→ Simulação de envio de informações entre continentes`),
+      r('7º ano','1º bimestre','Sociedades africanas, americanas e europeias no contexto das navegações.','Povos africanos e indígenas do Brasil pré-colonial.',[h('EF07HI03','Identificar aspectos e processos específicos das sociedades africanas e americanas antes da chegada dos europeus, com destaque para as formas de organização social e o desenvolvimento de saberes e técnicas.')],'(EF07CO11) Criar, documentar e publicar, de forma individual ou colaborativa, produtos usando recursos de tecnologia.',`→ Leitura sobre sociedades africanas e indígenas
+→ Comparação em tabela
+→ Discussão sobre saberes antes da colonização`,`→ Criação de infográfico digital
+→ Organização das informações em blocos
+→ Apresentação digital das estruturas sociais`),
+      r('7º ano','1º bimestre','Sociedades africanas, americanas e europeias no contexto das navegações.','Modos de vida tradicionais e concepções de desenvolvimento.',[h('EF07HI01MB','Identificar e comparar modos de vida de comunidades camponesas, indígenas e povos da floresta no sudeste do Pará como contraposição à ideia de progresso.')],'(EF07CO11) Criar, documentar e publicar, de forma individual ou colaborativa, produtos usando recursos de tecnologia.',`→ Debate sobre “progresso” x modos de vida tradicionais
+→ Estudo de caso
+→ Produção de cartaz comparativo`,`→ Produção de vídeo curto com IA mostrando modos de vida tradicionais
+→ Pesquisa guiada na internet
+→ Discussão sobre impacto ambiental da tecnologia`),
+      r('7º ano','1º bimestre','Sociedades africanas, americanas e europeias no contexto das navegações.','Identidade do homem do campo e saberes.',[h('EF07HI02MB','Identificar as produções artísticas no campo de Marabá;')],'(EF07CO11) Criar, documentar e publicar, de forma individual ou colaborativa, produtos usando recursos de tecnologia.',`→ Levantamento de manifestações culturais locais
+→ Relato oral dos alunos sobre cultura da região
+→ Registro em cartaz coletivo`,`→ Criação de galeria digital (Padlet)
+→ Produção de vídeos, imagens ou podcasts
+→ Compartilhamento das produções culturais`),
+      r('7º ano','1º bimestre','Sociedades africanas, americanas e europeias no contexto das navegações.','A arte e cultura camponesa.',[h('EF07HI03MB','Compreender o significado da inclusão e da exclusão social e cultural no meio rural;'),h('EF07HI04MB','Identificar as conexões de conhecimento atuais para compreender o surgimento de vilas;'),h('EF07HI05MB','Identificar os aspectos culturais como forma de organização social e saberes da terra;'),h('EF07HI06MB','Identificar na sociedade campesina, traços das diversas culturas a partir da colonização.')],'(EF07CO09) Reconhecer e debater sobre cyberbullying. / (EF07CO04) Explorar propriedades básicas de grafos. / (EF07CO05) Criar algoritmos fazendo uso da decomposição e do reúso. / (EF07CO11) Criar, documentar e publicar produtos usando recursos de tecnologia.',`→ Debate sobre inclusão/exclusão no campo
+→ Análise de situações do cotidiano rural
+→ Construção de esquema no quadro sobre surgimento de vilas
+→ Estudo dos saberes da terra
+→ Discussão sobre influências culturais da colonização`,`→ Simulação de situações online
+→ Criação de regras de convivência digital
+→ Criação de mapa de conexões
+→ Transformar processos em algoritmo
+→ Criação de apresentação digital ou mural no Padlet`),
+
+      // 7º ANO - 2º ao 4º BIMESTRE
+      r('7º ano','2º bimestre','Humanismos, Reformas e Estados Nacionais.','Humanismos e Renascimentos.',[h('EF07HI04','Identificar as principais características dos Humanismos e dos Renascimentos e analisar seus significados.')],'(EF07CO11) Criar, documentar e publicar produtos usando recursos de tecnologia.',`→ Aula expositiva dialogada sobre Humanismo e Renascimento
+→ Análise de imagens de obras renascentistas
+→ Comparação: Idade Média x Renascimento
+→ Produção de esquema no caderno`,`→ Criação de apresentação interativa no Curipod
+→ Quiz gamificado no Kahoot/Wayground
+→ Produção de mini vídeo explicativo em grupo`),
+      r('7º ano','2º bimestre','Humanismos, Reformas e Estados Nacionais.','Reformas religiosas e as influências comportamentais na Europa e na América.',[h('EF07HI05','Identificar e relacionar as vinculações entre as Reformas Religiosas e os processos culturais e sociais do período moderno na Europa e na América.')],'(EF07CO03) Construir soluções computacionais de problemas de diferentes áreas do conhecimento.',`→ Aula dialogada sobre Reforma Protestante e Contrarreforma
+→ Linha do tempo coletiva no quadro
+→ Debate sobre mudanças sociais e culturais
+→ Atividade de causa e consequência`,`→ Construção de linha do tempo digital
+→ Simulação de rede de influências
+→ Jogo de perguntas e respostas no Kahoot
+→ Mapa mental digital`),
+      r('7º ano','2º bimestre','Humanismos, Reformas e Estados Nacionais.','Os efeitos das Reformas Religiosas no Brasil atual.',[h('EF07HI02MB','Compreender os efeitos das Reformas Religiosas no comportamento político e econômico dos brasileiros na atualidade.')],'(EF07CO08) Demonstrar empatia sobre opiniões divergentes na web.',`→ Debate sobre religião e sociedade atual
+→ Análise de situações do cotidiano
+→ Produção de opiniões argumentativas
+→ Discussão sobre respeito às diferenças`,`→ Simulação de fórum online com opiniões divergentes
+→ Uso do Padlet para postagem de opiniões
+→ Análise de comentários (respeito x desrespeito)`),
+      r('7º ano','2º bimestre','Humanismos, Reformas e Estados Nacionais.','A formação dos Estados Nacionais.',[h('EF07HI07','Descrever os processos de formação e consolidação das monarquias e suas principais características com vistas à compreensão das razões da centralização política.')],'(EF07CO05) Criar algoritmos fazendo uso da decomposição e do reúso no processo de solução.',`→ Aula expositiva sobre monarquias nacionais
+→ Esquema no quadro: etapas da centralização do poder
+→ Estudo de caso
+→ Atividade de sequência lógica`,`→ Transformar o processo histórico em fluxograma
+→ Criação de sequência lógica digital
+→ Quiz gamificado no Wayground/Kahoot
+→ Simulação de tomada de decisões de um rei`),
+      r('7º ano','3º bimestre','A formação dos Estados nacionais e a dinâmica do mundo colonial.','O investimento europeu nas Grandes Navegações.',[h('EF07HI06','Comparar as navegações no Atlântico e no Pacífico entre os séculos XIV e XVI.')],'(EF07CO04) Explorar propriedades básicas de grafos.',`→ Análise de mapas das navegações
+→ Comparação entre rotas
+→ Identificação de semelhanças e diferenças
+→ Construção de esquema no caderno`,`→ Representação das rotas como rede de conexões
+→ Jogo rápido no Kahoot sobre as navegações`),
+      r('7º ano','3º bimestre','A formação dos Estados nacionais e a dinâmica do mundo colonial.','As formas de organização política e social dos povos americanos.',[h('EF07HI08','Descrever as formas de organização das sociedades americanas no tempo da conquista com vistas à compreensão dos mecanismos de alianças, confrontos e resistências.')],'(EF07CO03) Construir soluções computacionais de problemas de diferentes áreas do conhecimento.',`→ Aula dialogada sobre sociedades indígenas
+→ Estudo de alianças e conflitos
+→ Simulação em sala
+→ Registro em esquema`,`→ Criação de mapa mental digital
+→ Simulação de decisões em grupo
+→ Organização das relações em esquema digital
+→ Atividade interativa no Curipod`),
+      r('7º ano','3º bimestre','A formação dos Estados nacionais e a dinâmica do mundo colonial.','Os impactos da conquista europeia para as populações americanas.',[h('EF07HI09','Analisar os diferentes impactos da conquista europeia da América para as populações ameríndias e identificar as formas de resistência.')],'(EF07CO03) Construir soluções computacionais de problemas de diferentes áreas do conhecimento.',`→ Aula expositiva dialogada sobre a conquista da América
+→ Leitura de relatos históricos
+→ Identificação dos impactos
+→ Discussão sobre resistências indígenas
+→ Produção de esquema`,`→ Criação de linha do tempo digital
+→ Organização dos impactos em categorias
+→ Produção de mural digital com exemplos de resistência
+→ Apresentação colaborativa`),
+      r('7º ano','3º bimestre','A formação dos Estados nacionais e a dinâmica do mundo colonial.','As dinâmicas das sociedades americanas no período colonial.',[h('EF07HI10','Analisar, com base em documentos históricos, diferentes interpretações sobre as dinâmicas das sociedades americanas no período colonial.')],'(EF07CO08) Demonstrar empatia sobre opiniões divergentes na web.',`→ Análise de documentos históricos
+→ Comparação de diferentes interpretações
+→ Debate guiado em sala
+→ Produção de opinião escrita`,`→ Simulação de fórum online
+→ Postagem de opiniões no Padlet
+→ Comentários respeitosos
+→ Análise de divergências`),
+      r('7º ano','3º bimestre','A formação dos Estados nacionais e a dinâmica do mundo colonial.','A formação histórico-geográfica da América portuguesa.',[h('EF07HI11','Analisar a formação histórico-geográfica do território da América portuguesa por meio de mapas históricos.')],'(EF07CO03) Construir soluções computacionais de problemas de diferentes áreas do conhecimento.',`→ Análise de mapas históricos impressos
+→ Comparação de mudanças territoriais
+→ Identificação de expansão territorial
+→ Atividade com linhas do tempo e mapas`,`→ Produção de mapa comentado digital no Padlet
+→ Sobreposição de mapas históricos e atuais
+→ Exploração digital das transformações espaciais usando Skybox`),
+      r('7º ano','3º bimestre','A formação dos Estados nacionais e a dinâmica do mundo colonial.','A distribuição histórico-territorial da população brasileira.',[h('EF07HI12','Identificar a distribuição territorial da população brasileira em diferentes épocas, considerando a diversidade étnico-racial e étnico-cultural (indígena, africana, europeia e asiática).')],'(EF07CO03) Construir soluções computacionais de problemas de diferentes áreas do conhecimento.',`→ Análise de mapas impressos da população brasileira
+→ Identificação dos principais grupos
+→ Construção de tabela no caderno
+→ Debate sobre diversidade cultural no Brasil`,`→ Uso de mapas digitais
+→ Criação de gráficos simples
+→ Comparação entre diferentes períodos históricos
+→ Produção de apresentação digital`),
+      r('7º ano','4º bimestre','Lógicas Comerciais e Mercantis da modernidade.','Dinâmicas comerciais das sociedades americanas e africanas.',[h('EF07HI14','Descrever as dinâmicas comerciais das sociedades americanas e africanas e analisar suas interações com outras sociedades do Ocidente e do Oriente.')],'(EF07CO11) Criar, documentar e publicar produtos usando recursos de tecnologia.',`→ Aula expositiva dialogada sobre comércio entre continentes
+→ Análise de mapas históricos
+→ Identificação de produtos trocados
+→ Discussão sobre interações culturais e econômicas
+→ Produção de esquema no caderno`,`→ Produção de vídeo curto
+→ Produção de podcast em grupo
+→ Publicação e apresentação dos trabalhos`),
+      r('7º ano','4º bimestre','Lógicas Comerciais e Mercantis da modernidade.','A dinâmica comercial europeia: o mercantilismo.',[h('EF07HI13','Caracterizar a ação dos europeus e suas lógicas mercantis visando ao domínio no mundo atlântico.')],'(EF07CO03) Construir soluções computacionais de problemas de diferentes áreas do conhecimento.',`→ Aula dialogada sobre mercantilismo
+→ Identificação das práticas econômicas
+→ Estudo de exemplos históricos
+→ Produção de esquema`,`→ Criação de mapa mental digital
+→ Simulação de decisões econômicas
+→ Organização das estratégias em formato digital
+→ Atividade interativa no Curipod`),
+      r('7º ano','4º bimestre','Lógicas Comerciais e Mercantis da modernidade.','A escravidão moderna, o escravismo no Brasil colônia e no mundo antigo, o mundo antigo e a servidão medieval; O comércio de escravos africanos.',[h('EF07HI15','Discutir o conceito de escravidão moderna e suas distinções em relação ao escravismo antigo e à servidão medieval.'),h('EF07HI16','Analisar os mecanismos e as dinâmicas de comércio de escravizados em suas diferentes fases, identificando os agentes responsáveis pelo tráfico e as regiões e zonas africanas de procedência dos escravizados.')],'(EF07CO03) Construir soluções computacionais de problemas de diferentes áreas do conhecimento. / (EF07CO04) Explorar propriedades básicas de grafos.',`→ Aula expositiva dialogada sobre escravidão antiga, moderna e servidão medieval
+→ Construção de quadro comparativo
+→ Discussão crítica sobre direitos humanos
+→ Análise de mapas do tráfico negreiro
+→ Identificação de rotas e regiões africanas`,`→ Infográfico digital sobre os tipos de trabalho compulsório
+→ Quiz no Kahoot/Wayground
+→ Criação de mapa digital das rotas do tráfico
+→ Representação das relações como rede
+→ Exploração de mapa interativo`),
+      r('7º ano','4º bimestre','Lógicas Comerciais e Mercantis da modernidade.','Do mercantilismo ao capitalismo.',[h('EF07HI17','Discutir as razões da passagem do mercantilismo para o capitalismo.')],'(EF07CO03) Construir soluções computacionais de problemas de diferentes áreas do conhecimento.',`→ Aula dialogada sobre mercantilismo x capitalismo
+→ Identificação de mudanças econômicas
+→ Debate sobre causas da transição
+→ Produção de esquema comparativo`,`→ Criação de linha do tempo multimodal (Padlet)
+→ Organização das transformações econômicas
+→ Quiz no Wayground para revisão do conteúdo`),
+
+      // 8º ANO - TODOS OS BIMESTRES
+      r('8º ano','1º bimestre','O antigo regime em crise.','O pensamento iluminista e o liberalismo econômico.',[h('EF08HI01','Identificar os principais aspectos conceituais do Iluminismo e do Liberalismo e discutir a relação entre eles e a organização do mundo contemporâneo.')],'(EF08CO11) Avaliar a precisão, relevância, adequação, abrangência e vieses que ocorrem em fontes de informação eletrônica.',`→ Aula expositiva dialogada sobre Iluminismo e Liberalismo
+→ Leitura de textos
+→ Comparação entre conceitos
+→ Debate sobre influência no mundo atual
+→ Produção de esquema`,`→ Pesquisa simples na internet
+→ Comparação entre duas fontes
+→ Discussão sobre fake news e informação histórica
+→ Produção de resumo digital`),
+      r('8º ano','1º bimestre','O antigo regime em crise.','As revoluções inglesas do século XVII.',[h('EF08HI02','Identificar as particularidades político-sociais da Inglaterra do século XVII e analisar os desdobramentos posteriores à Revolução Gloriosa.')],'(EF08CO03) Construir soluções computacionais de problemas de diferentes áreas do conhecimento.',`→ Aula dialogada sobre Revolução Gloriosa
+→ Linha do tempo no quadro
+→ Identificação de causas e consequências
+→ Produção de resumo`,`→ Criação de linha do tempo simples no Padlet
+→ Organização antes/depois
+→ Quiz no Kahoot/Wayground
+→ Apresentação oral dos grupos`),
+      r('8º ano','1º bimestre','O antigo regime em crise.','A Revolução Industrial.',[h('EF08HI03','Analisar os impactos da Revolução Industrial na produção e circulação de povos, produtos e culturas.')],'(EF08CO04) Construir soluções computacionais de problemas de diferentes áreas do conhecimento.',`→ Aula expositiva sobre Revolução Industrial
+→ Identificação de mudanças
+→ Discussão sobre migração e circulação
+→ Produção de quadro antes x depois`,`→ Criação de infográfico simples
+→ Organização das mudanças em categorias
+→ Exibição de vídeo curto educativo
+→ Produção de resumo digital`),
+      r('8º ano','1º bimestre','O antigo regime em crise.','O desenvolvimento industrial de Marabá, suas causas e consequências.',[h('EF08HI01MB','Analisar os impactos do crescimento industrial em Marabá, na produção e na circulação de povos, produtos e culturas.'),h('EF08HI01MB','Analisar os efeitos do crescimento industrial e do agronegócio, em Marabá, na produção e na circulação de povos, produtos e culturas.')],'(EF08CO07) Compartilhar informações por meio de redes sociais, compreendendo a sua dinâmica de funcionamento, de forma responsável e avaliando sua confiabilidade.',`→ Debate sobre crescimento industrial em Marabá
+→ Relatos dos alunos sobre mudanças locais
+→ Levantamento de exemplos reais
+→ Produção de cartaz coletivo`,`→ Produção de vídeo curto ou áudio
+→ Compartilhamento em ambiente digital
+→ Discussão sobre responsabilidade ao compartilhar informações`),
+      r('8º ano','1º bimestre','O antigo regime em crise.','A Revolução Francesa e suas influências na América e no mundo.',[h('EF08HI04','Identificar e relacionar os processos da Revolução Francesa e seus desdobramentos na Europa e no mundo.')],'(EF08CO03) Construir soluções computacionais de problemas de diferentes áreas do conhecimento.',`→ Aula expositiva sobre Revolução Francesa
+→ Identificação das fases
+→ Construção de linha do tempo
+→ Discussão sobre impactos`,`→ Criação de linha do tempo digital simples
+→ Organização das fases e acontecimentos
+→ Quiz no Kahoot/Wayground`),
+      r('8º ano','1º bimestre','O antigo regime em crise.','Os ecos da Revolução Francesa na América portuguesa: Inconfidência Mineira e Baiana.',[h('EF08HI05','Explicar os movimentos e as rebeliões da América portuguesa, articulando as temáticas locais e suas interfaces com processos ocorridos na Europa e nas Américas.')],'(EF08CO11) Avaliar a precisão, relevância, adequação, abrangência e vieses que ocorrem em fontes de informação eletrônica.',`→ Aula dialogada sobre revoltas coloniais
+→ Estudo de casos
+→ Identificação de causas e objetivos
+→ Produção de resumo`,`→ Pesquisa guiada na internet
+→ Comparação de diferentes fontes
+→ Identificação de possíveis erros ou distorções
+→ Produção de pequeno texto digital`),
+      r('8º ano','2º bimestre','Independências nas Américas.','Os conceitos de Estado, nação, território, governo e país.',[h('EF08HI06','Aplicar os conceitos de Estado, nação, território, governo e país para o entendimento de conflitos e tensões.')],'(EF08CO11) Avaliar a precisão, relevância, adequação, abrangência e vieses que ocorrem em fontes de informação eletrônica.',`→ Explicação dos conceitos com exemplos do cotidiano
+→ Comparação entre países em conflito
+→ Debate guiado
+→ Produção de esquema no caderno`,`→ Pesquisa orientada no Google sobre conflitos atuais
+→ Análise de diferentes fontes
+→ Identificar informações confiáveis e duvidosas
+→ Registro digital simples`),
+      r('8º ano','2º bimestre','Independências nas Américas.','A independência dos Estados Unidos da América.',[h('EF08HI07','Identificar e contextualizar as especificidades dos diversos processos de independência nas Américas, seus aspectos populacionais e suas conformações territoriais.')],'(EF08CO06) Entender como é a estrutura e funcionamento da internet.',`→ Leitura de textos sobre independência dos EUA
+→ Comparação do processo entre países
+→ Análise de mapas históricos
+→ Construção de linha do tempo`,`→ Uso de mapas digitais
+→ Pesquisa sobre países independentes
+→ Discussão: como a internet conecta esses países hoje
+→ Registro em mapa comentado`),
+      r('8º ano','2º bimestre','Independências nas Américas.','A independência da América Espanhola.',[h('EF08HI08','Conhecer o ideário dos líderes dos movimentos independentistas e seu papel nas revoluções que levaram à independência das colônias hispano-americanas.')],'(EF08CO07) Compartilhar informações por meio de redes sociais, compreendendo sua dinâmica de funcionamento de forma responsável.',`→ Leitura sobre líderes
+→ Debate sobre ideias defendidas por eles
+→ Produção de pequeno texto opinativo
+→ Apresentação oral`,`→ Criação de perfil de um líder histórico
+→ Discussão sobre fake news e distorções históricas
+→ Compartilhamento em mural`),
+      r('8º ano','2º bimestre','Independências nas Américas.','A independência do Haiti.',[h('EF08HI09','Conhecer as características e os principais pensadores do Pan-americanismo.'),h('EF08HI10','Identificar a Revolução de São Domingo como evento singular e desdobramento da Revolução Francesa e avaliar suas implicações.')],'(EF08CO04) Construir soluções computacionais de problemas de diferentes áreas do conhecimento. / (EF08CO08) Distinguir os tipos de dados pessoais solicitados em espaços digitais e os riscos associados.',`→ Aula expositiva sobre Pan-americanismo e Revolução Haitiana
+→ Leitura de texto
+→ Debate sobre união entre países, escravidão e resistência
+→ Produção de esquema ou resumo`,`→ Criação de mapa colaborativo das Américas
+→ Atividade no Curipod ou Kahoot
+→ Pesquisa sobre Haiti atual
+→ Discussão sobre exposição de dados na internet`),
+      r('8º ano','2º bimestre','Independências nas Américas.','A instalação da corte portuguesa no Rio de Janeiro em 1808.',[h('EF08HI11','Identificar e explicar os protagonismos e a atuação de diferentes grupos sociais e étnicos nas lutas de independência no Brasil, na América espanhola e no Haiti.')],'(EF08CO07) Compartilhar informações por meio de redes sociais de forma responsável e avaliando sua confiabilidade.',`→ Análise de diferentes grupos sociais
+→ Estudo de casos
+→ Debate guiado
+→ Produção de quadro comparativo`,`→ Produção de linha do tempo digital
+→ Inserção de imagens e textos
+→ Discussão sobre representatividade`),
+      r('8º ano','2º bimestre','Independências nas Américas.','O processo de “independência” do Brasil.',[h('EF08HI12','Caracterizar a organização política e social no Brasil desde a chegada da Corte portuguesa, em 1808, até 1822 e seus desdobramentos para a história política brasileira.')],'(EF08CO06) Entender como é a estrutura e funcionamento da internet.',`→ Aula expositiva
+→ Leitura de texto histórico
+→ Construção de linha do tempo
+→ Debate sobre mudanças políticas`,`→ Vídeo educativo
+→ Pesquisa complementar
+→ Registro em slide ou texto digital
+→ Jogo no Padlet Arcade`),
+      r('8º ano','2º bimestre','Independências nas Américas.','Os diferentes processos de independência na América Latina.',[h('EF08HI13','Analisar o processo de independência em diferentes países latino-americanos e comparar as formas de governo neles adotadas.')],'(EF08CO11) Avaliar a precisão, relevância, adequação, abrangência e vieses que ocorrem em fontes de informação eletrônica.',`→ Comparação entre países
+→ Quadro no caderno
+→ Debate sobre formas de governo
+→ Exercícios`,`→ Pesquisa orientada
+→ Análise de fontes diferentes
+→ Produção de painel no Padlet`),
+      r('8º ano','2º bimestre','Independências nas Américas.','O Indígena e o negro na formação do povo brasileiro e demais formações afro-americanas.',[h('EF08HI14','Discutir a noção da tutela dos grupos indígenas e a participação dos negros na sociedade brasileira do final do período colonial, identificando permanências na forma de preconceitos, estereótipos e violências sobre as populações indígenas e negras no Brasil e nas Américas.')],'(EF08CO10) Discutir questões sobre segurança e privacidade relacionadas ao uso dos ambientes virtuais.',`→ Leitura e debate guiado
+→ Análise de situações de preconceito
+→ Produção de texto reflexivo
+→ Discussão coletiva`,`→ Análise de comentários na internet
+→ Debate sobre discurso de ódio
+→ Orientação sobre comportamento online
+→ Produção de cartaz digital`),
+      r('8º ano','2º bimestre','Independências nas Américas.','A participação de índios e negro no processo de independência no Grão-Pará.',[h('EF08HI02MB','Identificar o protagonismo de indígenas e negros nas lutas pela independência no Grão-Pará.'),h('EF08HI03MB','Identificar a participação política e cultural do indígena em Marabá como forma de resistência às políticas de dominação.'),h('EF08HI04MB','Identificar e valorizar as manifestações de reafirmação da negritude no sudeste do Pará.')],'(EF08CO07) Compartilhar informações por meio de redes sociais de forma responsável. / (EF08CO08) Distinguir os tipos de dados pessoais solicitados em espaços digitais.',`→ Estudo de casos locais
+→ Debate sobre resistência
+→ Produção de texto
+→ Discussão sobre cultura indígena local
+→ Análise de manifestações culturais`,`→ Pesquisa sobre história local
+→ Publicar vídeo explicativo em rede social
+→ Pesquisa de imagens e registros
+→ Produção de mural digital (Padlet)
+→ Criação de apresentação digital`),
+      r('8º ano','3º bimestre','O Brasil no século XIX.','Estrutura política e sociedade brasileiras no Primeiro e Segundo Império.',[h('EF08HI15','Identificar e analisar o equilíbrio das forças e os sujeitos envolvidos nas disputas políticas durante o Primeiro e o Segundo Reinado.')],'(EF08CO11) Avaliar a precisão, relevância, adequação, abrangência e vieses que ocorrem em fontes de informação eletrônica.',`→ Aula expositiva sobre Primeiro e Segundo Reinado
+→ Identificação dos grupos políticos
+→ Debate sobre disputas de poder
+→ Produção de esquema no caderno`,`→ Pesquisa orientada sobre personagens políticos
+→ Comparação entre duas fontes
+→ Identificação de vieses históricos
+→ Produção de texto digital`),
+      r('8º ano','3º bimestre','O Brasil no século XIX.','Movimentos contestatórios na Amazônia e em outras regiões: Cabanagem, Sabinada, Balaiada e Farroupilha.',[h('EF08HI16','Identificar, comparar e analisar a diversidade política, social e regional nas rebeliões e nos movimentos contestatórios ao poder centralizado.')],'(EF08CO04) Construir soluções computacionais de problemas de diferentes áreas do conhecimento.',`→ Aula dialogada sobre Cabanagem, Sabinada, Balaiada e Farroupilha
+→ Comparação entre revoltas
+→ Construção de quadro comparativo
+→ Discussão sobre desigualdade regional`,`→ Criação de tabela ou infográfico digital
+→ Organização das revoltas por categorias
+→ Atividade no Kahoot ou Curipod
+→ Apresentação em grupo`),
+      r('8º ano','3º bimestre','O Brasil no século XIX.','As “reformulações” territoriais e suas consequências sociais e econômicas na sociedade brasileira.',[h('EF08HI05MB','Identificar movimentos contestatórios regionais frente às políticas nacionais, exemplificando as manifestações peculiares à divisão do estado do Pará e os discursos relacionados emergentes nos respectivos municípios.'),h('EF08HI17','Relacionar as transformações territoriais, em razão de questões de fronteiras, com as tensões e conflitos durante o Império.')],'(EF08CO07) Compartilhar informações por meio de redes sociais de forma responsável. / (EF08CO06) Entender como é a estrutura e funcionamento da internet.',`→ Debate sobre divisão do Pará
+→ Levantamento de opiniões e argumentos
+→ Análise de mapas históricos do Brasil
+→ Discussão sobre interesses regionais e conflitos de fronteira`,`→ Simulação de postagem em rede social
+→ Produção de cartaz digital ou post no Padlet
+→ Comparação entre mapas antigos e atuais
+→ Produção de mapa comentado digital no Padlet`),
+      r('8º ano','3º bimestre','O Brasil no século XIX.','A Guerra do Paraguai: as causas e as consequências.',[h('EF08HI18','Identificar as questões internas e externas sobre a atuação do Brasil na Guerra do Paraguai e discutir diferentes versões sobre o conflito.'),h('EF08HI06MB','Conhecer o papel dos diferentes agentes na Guerra do Paraguai, destacando a participação do negro no conflito.')],'(EF08CO11) Avaliar fontes eletrônicas. / (EF08CO07) Compartilhar informações por meio de redes sociais de forma responsável.',`→ Aula expositiva sobre Guerra do Paraguai
+→ Identificação das causas internas e externas
+→ Debate sobre diferentes versões históricas
+→ Discussão sobre participação dos negros na guerra`,`→ Pesquisa sobre versões do conflito
+→ Comparação entre fontes diferentes
+→ Produção de texto digital
+→ Produção de vídeo curto ou áudio explicativo no Padlet`),
+      r('8º ano','3º bimestre','O Brasil no século XIX.','O sistema escravista brasileiro, as manifestações de resistência e as heranças do escravismo na atualidade; movimentos abolicionistas brasileiros e paraense.',[h('EF08HI19','Formular questionamentos sobre o legado da escravidão nas Américas, com base na seleção e consulta de fontes de diferentes naturezas.'),h('EF08HI20','Identificar e relacionar aspectos das estruturas sociais da atualidade com os legados da escravidão no Brasil e discutir a importância de ações afirmativas.')],'(EF08CO11) Avaliar fontes eletrônicas. / (EF08CO10) Discutir questões sobre segurança e privacidade relacionadas ao uso dos ambientes virtuais.',`→ Debate sobre legado da escravidão
+→ Análise de textos e imagens
+→ Formulação de perguntas pelos alunos
+→ Discussão sobre desigualdade social atual e ações afirmativas`,`→ Pesquisa orientada em diferentes fontes
+→ Comparação de conteúdos
+→ Produção de perguntas e respostas em formato digital
+→ Análise de comentários e discursos na internet
+→ Produção de cartaz digital`),
+      r('8º ano','3º bimestre','O Brasil no século XIX.','Políticas Indigenistas no Período Imperial; imaginário nacional e romantismo.',[h('EF08HI21','Identificar e analisar as políticas oficiais com relação ao indígena durante o Império.'),h('EF08HI22','Discutir o papel das culturas letradas, não letradas e das artes na produção das identidades no Brasil do século XIX.')],'(EF08CO08) Distinguir tipos de dados pessoais solicitados em espaços digitais. / (EF08CO04) Construir soluções computacionais.',`→ Aula expositiva sobre políticas indigenistas
+→ Leitura e análise de texto
+→ Debate sobre impactos históricos
+→ Análise de manifestações culturais
+→ Debate sobre identidade nacional`,`→ Pesquisa sobre povos indígenas hoje
+→ Discussão sobre exposição de dados e identidade
+→ Produção de mural digital
+→ Criação de apresentação digital ou infográfico`),
+      r('8º ano','4º bimestre','O mundo no século XIX.','Darwinismo social, ideologias raciais e etnocentrismo nas práticas imperialistas do século XIX.',[h('EF08HI23','Estabelecer relações causais entre as ideologias raciais e o determinismo no contexto do imperialismo europeu e seus impactos na África e na Ásia.'),h('EF08HI07MB','Discutir a relação entre as teorias raciais e a estigmatização de grupos sociais historicamente marginalizados (negros, indígenas, PCDs, mulheres, LGBTQIA+);')],'(EF08CO11) Avaliar fontes eletrônicas. / (EF08CO10) Discutir segurança e privacidade em ambientes virtuais.',`→ Aula expositiva sobre imperialismo e racismo científico
+→ Leitura de textos históricos
+→ Debate sobre determinismo e desigualdade
+→ Debate sobre preconceito, discriminação e inclusão`,`→ Pesquisa orientada sobre imperialismo
+→ Comparação entre diferentes fontes
+→ Identificação de preconceitos e vieses
+→ Análise de comentários em redes sociais
+→ Produção de cartaz digital`),
+      r('8º ano','4º bimestre','O mundo no século XIX.','Imperialismo, colonialismo e exploração econômica no século XIX: a partilha da África e Ásia por países europeus.',[h('EF08HI24','Reconhecer os principais produtos, utilizados pelos europeus, procedentes do continente africano e asiático durante o imperialismo e analisar os impactos sobre as comunidades locais na forma de organização e exploração econômica.')],'(EF08CO04) Construir soluções computacionais de problemas de diferentes áreas do conhecimento.',`→ Identificação dos produtos explorados
+→ Análise de mapas e rotas comerciais
+→ Discussão sobre exploração econômica
+→ Produção de quadro no caderno`,`→ Criação de infográfico digital
+→ Organização dos produtos por região
+→ Relação entre exploração e impacto social
+→ Apresentação dos trabalhos`),
+      r('8º ano','4º bimestre','O mundo no século XIX.','Comunidades da floresta, de rios e grupos indígenas do sudeste do Pará frente à modernização e progresso na região.',[h('EF08HI08MB','Refletir sobre o processo de marginalização das comunidades da floresta, de rios e grupos indígenas no sudeste do Pará.')],'(EF08CO07) Compartilhar informações por meio de redes sociais de forma responsável.',`→ Debate sobre comunidades tradicionais
+→ Levantamento de exemplos locais
+→ Discussão sobre marginalização
+→ Produção de texto`,`→ Produção de vídeo ou áudio sobre a realidade local
+→ Criação de post informativo
+→ Compartilhamento em mural digital
+→ Discussão sobre responsabilidade digital`),
+      r('8º ano','4º bimestre','O mundo no século XIX.','As políticas imperialistas estadunidenses sobre a América Latina no século XIX.',[h('EF08HI25','Caracterizar e contextualizar aspectos das relações entre os Estados Unidos da América e a América Latina no século XIX.'),h('EF08HI09MB','Perceber a influência imperialista estadunidense no Brasil atual.')],'(EF08CO01) Construir soluções usando recursão. / (EF08CO11) Avaliar fontes eletrônicas.',`→ Aula expositiva sobre relações entre EUA e América Latina
+→ Debate sobre influência política e econômica
+→ Debate sobre influência cultural e econômica atual`,`→ Criação de diálogo no Scratch
+→ Simulação de interesses entre EUA e país latino-americano
+→ Pesquisa sobre influência dos EUA no Brasil
+→ Produção de resumo digital`),
+      r('8º ano','4º bimestre','O mundo no século XIX.','As resistências ao Imperialismo na África e Ásia; discursos civilizatórios e marginalização.',[h('EF08HI26','Identificar e contextualizar o protagonismo das populações locais na resistência ao imperialismo na África e Ásia.'),h('EF08HI27','Identificar as tensões e os significados dos discursos civilizatórios, avaliando seus impactos negativos para os povos indígenas originários e as populações negras nas Américas.')],'(EF08CO02) Criar soluções com listas. / (EF08CO10) Discutir questões de segurança e privacidade nos ambientes virtuais.',`→ Estudo de casos de resistência na África e Ásia
+→ Debate sobre protagonismo local
+→ Produção de quadro comparativo
+→ Leitura e análise de textos sobre discursos civilizatórios`,`→ Criação de diálogo no Scratch
+→ Organização das falas em sequência
+→ Análise de discursos na internet
+→ Produção de cartaz digital`),
+
+      // 9º ANO - TODOS OS BIMESTRES
+      r('9º ano','1º bimestre','Política e sociedade no Brasil da primeira república.','A Proclamação da República brasileira: os antecedentes e efetivação.',[h('EF09HI01','Descrever e contextualizar os principais aspectos sociais, culturais, econômicos e políticos da emergência da República no Brasil.')],'(EF09CO10) Avaliar a veracidade, credibilidade e relevância da informação em seus diferentes formatos.',`→ Aula expositiva dialogada sobre a Proclamação da República
+→ Leitura de texto histórico
+→ Identificação dos principais grupos envolvidos
+→ Produção de esquema no caderno`,`→ Pesquisa orientada em diferentes fontes
+→ Identificação de informações confiáveis e distorções
+→ Construção de linha do tempo colaborativa no Padlet`),
+      r('9º ano','1º bimestre','Política e sociedade no Brasil da primeira república.','Oligarquia, coronelismo e clientelismo no Brasil e em Marabá.',[h('EF09HI01MB','Identificar e contextualizar as rupturas e permanências do após Proclamação da República.')],'(EF09CO06) Analisar problemas sociais de sua cidade e estado a partir de ambientes digitais, propondo soluções.',`→ Aula dialogada sobre mudanças e permanências
+→ Discussão sobre relações de poder
+→ Comparação entre Império e República
+→ Registro no caderno`,`→ Pesquisa sobre permanências políticas e sociais no Pará e em Marabá
+→ Organização em tabela simples
+→ Discussão sobre problemas antigos no presente
+→ Produção de slide ou cartaz digital`),
+      r('9º ano','1º bimestre','Política e sociedade no Brasil da primeira república.','O pensamento positivista e seus efeitos históricos no Brasil.',[h('EF09HI02MB','Descrever as características do pensamento positivista, seus efeitos na estrutura política e social brasileira e a relação com a vida cotidiana das comunidades marabaenses.')],'(EF09CO07) Avaliar aplicações e implicações políticas, socioambientais e culturais das tecnologias digitais.',`→ Aula expositiva sobre positivismo
+→ Leitura de texto sobre “ordem e progresso”
+→ Debate sobre os efeitos desse pensamento na política e na sociedade`,`→ Pesquisa sobre a ideia de progresso em discursos e imagens atuais
+→ Análise de exemplos de modernização
+→ Produção de apresentação digital`),
+      r('9º ano','1º bimestre','Política e sociedade no Brasil da primeira república.','Modernização e exclusão social na Primeira República e o negro na sociedade nacional.',[h('EF09HI02','Caracterizar e compreender os ciclos da história republicana, identificando particularidades da história local e regional até 1954.')],'(EF09CO10) Avaliar veracidade, credibilidade e relevância da informação.',`→ Aula expositiva sobre ciclos da história republicana
+→ Construção de linha do tempo
+→ Identificação de marcos nacionais, regionais e locais
+→ Produção de resumo cronológico`,`→ Pesquisa orientada sobre fatos da história republicana
+→ Comparação entre fontes digitais
+→ Organização em linha do tempo digital
+→ Apresentação dos marcos`),
+      r('9º ano','1º bimestre','Política e sociedade no Brasil da primeira república.','O negro na sociedade brasileira pós-abolição e as políticas positivistas de “Ordem e Progresso”.',[h('EF09HI03','Identificar os mecanismos de inserção dos negros na sociedade brasileira pós abolição e avaliar os seus resultados.')],'(EF09CO06) Analisar problemas sociais de sua cidade e estado a partir de ambientes digitais, propondo soluções.',`→ Aula dialogada sobre pós-abolição
+→ Leitura de texto e análise de exemplos
+→ Debate sobre trabalho, moradia, educação e exclusão
+→ Produção de quadro no caderno`,`→ Pesquisa sobre desigualdades raciais no Brasil atual
+→ Análise de dados e reportagens
+→ Montagem de mural multimodal no Padlet`),
+      r('9º ano','1º bimestre','Política e sociedade no Brasil da primeira república.','A formação da sociedade brasileira e a valorização da diversidade; mito da democracia racial.',[h('EF09HI03MB','Analisar o mito da democracia racial no Brasil e posicionar-se contra o preconceito, a intolerância e as diferenças sociais.'),h('EF09HI04','Discutir a importância da participação da população negra na formação econômica, política e social do Brasil.')],'(EF69CO11) Apresentar conduta e linguagem apropriadas em ambiente digital. / (EF09CO09) Criar ou utilizar conteúdo em meio digital, compreendendo questões éticas.',`→ Aula dialogada sobre democracia racial, preconceito e desigualdade
+→ Debate sobre intolerância e respeito às diferenças
+→ Aula expositiva sobre participação da população negra na formação do Brasil`,`→ Análise de comentários e publicações em ambiente digital
+→ Elaboração de regras de convivência digital
+→ Pesquisa orientada de imagens, textos e biografias
+→ Organização em apresentação digital`),
+      r('9º ano','1º bimestre','Política e sociedade no Brasil da primeira república.','A ideia de modernização e progresso no Brasil e os efeitos em Marabá; Urbanização e demografia.',[h('EF09HI05','Identificar os processos de urbanização e modernização da sociedade brasileira e avaliar suas contradições e impactos na região em que vive.'),h('EF09HI04MB','Analisar a dinâmica da urbanização de Marabá e a existência/ausência de políticas públicas.')],'(EF69CO12) Analisar o consumo de tecnologia na sociedade. / (EF09CO06) Analisar problemas sociais de sua cidade e estado.',`→ Aula expositiva sobre urbanização e modernização
+→ Debate sobre progresso, exclusão e desigualdades
+→ Debate sobre urbanização em Marabá
+→ Levantamento de problemas urbanos`,`→ Pesquisa sobre mudanças urbanas em Marabá
+→ Discussão sobre tecnologia, consumo e modernização
+→ Uso de IA para gerar imagens de Marabá antiga
+→ Produção de mapa multimodal no Padlet`),
+      r('9º ano','1º bimestre','Política e sociedade no Brasil da primeira república.','As políticas trabalhistas no Brasil em diferentes contextos e espaços.',[h('EF09HI06','Identificar e discutir o papel do trabalhismo como força política, social e cultural no Brasil, em diferentes escalas.')],'(EF09CO07) Avaliar aplicações e implicações políticas, socioambientais e culturais das tecnologias digitais.',`→ Aula dialogada sobre o trabalhismo no Brasil
+→ Leitura de texto sobre direitos trabalhistas
+→ Debate sobre impactos sociais e culturais
+→ Produção de esquema`,`→ Pesquisa sobre direitos do trabalho em diferentes períodos
+→ Comparação entre passado e presente
+→ Produção de quadro digital ou slide`),
+      r('9º ano','1º bimestre','Política e sociedade no Brasil da primeira república.','Políticas indigenistas do SPI à FUNAI; movimentos sociais e diversidade.',[h('EF09HI07','Identificar e explicar, em meio a lógicas de inclusão e exclusão, as pautas dos povos indígenas, no contexto republicano (até 1964), e das populações afrodescendentes.'),h('EF09HI08','Identificar as transformações ocorridas no debate sobre as questões da diversidade no Brasil durante o século XX e compreender o significado das mudanças de abordagem em relação ao tema.'),h('EF09HI09','Relacionar as conquistas de direitos políticos, sociais e civis à atuação de movimentos sociais.')],'(EF69CO11) Apresentar conduta e linguagem apropriadas em ambiente digital. / (EF09CO10) Avaliar veracidade e relevância da informação. / (EF09CO06) Analisar problemas sociais.',`→ Aula expositiva sobre pautas indígenas e afrodescendentes
+→ Leitura de textos sobre diversidade
+→ Comparação entre antigas e novas abordagens
+→ Debate sobre movimentos sociais e conquistas de direitos`,`→ Pesquisa orientada sobre movimentos e reivindicações
+→ Produção de mural digital
+→ Comparação de discursos e fontes
+→ Organização em linha do tempo ou painel digital`),
+      r('9º ano','2º bimestre','Totalitarismos e conflitos mundiais.','Colonialismo europeu na África e Ásia e as lógicas de resistência das populações locais.',[h('EF09HI14','Caracterizar e discutir as dinâmicas do colonialismo no continente africano e asiático e as lógicas de resistência das populações locais diante das questões internacionais.')],'(EF09CO07) Avaliar aplicações e implicações políticas, socioambientais e culturais das tecnologias digitais.',`→ Aula expositiva dialogada sobre colonialismo
+→ Leitura de texto sobre dominação e resistências
+→ Identificação de interesses econômicos e políticos
+→ Produção de quadro no caderno`,`→ Pesquisa sobre casos de resistência
+→ Comparação entre mapas, imagens e textos digitais
+→ Produção de apresentação digital`),
+      r('9º ano','2º bimestre','Totalitarismos e conflitos mundiais.','Capitalismo e conflitos mundiais.',[h('EF09HI10','Identificar e relacionar as dinâmicas do capitalismo e suas crises, aos grandes conflitos mundiais e os conflitos vivenciados na Europa.')],'(EF09CO10) Avaliar veracidade, credibilidade e relevância da informação.',`→ Aula expositiva sobre capitalismo, crises econômicas e conflitos
+→ Leitura de texto sobre tensões europeias
+→ Debate sobre crises e conflitos
+→ Produção de esquema`,`→ Pesquisa orientada em fontes digitais
+→ Comparação entre textos, vídeos e gráficos
+→ Produção de resumo digital
+→ Quiz para fixar assunto`),
+      r('9º ano','2º bimestre','Totalitarismos e conflitos mundiais.','A Revolução Russa.',[h('EF09HI05MB','Identificar características do pensamento comunista e suas formas de aplicação.'),h('EF09HI11','Identificar as especificidades e os desdobramentos mundiais da Revolução Russa e seu significado histórico.')],'(EF69CO03) Descrever com precisão a solução de um problema. / (EF09CO06) Analisar problemas sociais.',`→ Aula dialogada sobre pensamento comunista
+→ Comparação entre comunismo, socialismo e capitalismo
+→ Aula expositiva sobre a Revolução Russa
+→ Produção de linha do tempo`,`→ Criação de diálogo simples no Scratch
+→ Organização das falas em sequência lógica
+→ Pesquisa sobre impactos mundiais da Revolução Russa
+→ Apresentação digital`),
+      r('9º ano','2º bimestre','Totalitarismos e conflitos mundiais.','A crise do capitalismo em 1929 e em outros tempos.',[h('EF09HI12','Analisar a crise capitalista de 1929 e seus desdobramentos em relação à economia global.')],'(EF69CO12) Analisar o consumo de tecnologia na sociedade.',`→ Aula dialogada sobre a crise de 1929
+→ Leitura sobre superprodução, especulação e desemprego
+→ Debate sobre os efeitos da crise`,`→ Pesquisa sobre crises econômicas e consumo
+→ Análise de gráficos e reportagens
+→ Produção de infográfico digital`),
+      r('9º ano','2º bimestre','Totalitarismos e conflitos mundiais.','O nazismo alemão e o fascismo italiano; Segunda Guerra Mundial e holocausto.',[h('EF09HI06MB','Relacionar as situações de crise do capitalismo com a ascensão de governos totalitários.'),h('EF09HI13','Descrever e contextualizar os processos da emergência do fascismo e do nazismo, a consolidação dos Estados totalitários e as práticas de extermínio (como o holocausto).')],'(EF09CO10) Avaliar veracidade, credibilidade e relevância da informação. / (EF69CO11) Apresentar conduta e linguagem apropriadas ao se comunicar em ambiente digital.',`→ Aula expositiva sobre crise e ascensão de regimes totalitários
+→ Debate sobre propaganda e autoritarismo
+→ Aula expositiva sobre fascismo, nazismo e holocausto
+→ Produção de síntese`,`→ Pesquisa orientada sobre propaganda política
+→ Comparação entre materiais digitais
+→ Produção de texto digital
+→ Cartaz digital de conscientização
+→ Quiz para fixar assunto`),
+      r('9º ano','2º bimestre','Totalitarismos e conflitos mundiais.','Organização das Nações Unidas (ONU); Carta dos Direitos Humanos.',[h('EF09HI15','Discutir as motivações que levaram à criação da Organização das Nações Unidas (ONU) no contexto do pós-guerra e os propósitos dessa organização.'),h('EF09HI16','Relacionar a Carta dos Direitos Humanos ao processo de afirmação dos direitos fundamentais e de defesa da dignidade humana, valorizando as instituições voltadas para a defesa desses direitos e para a identificação dos agentes responsáveis por sua violação.')],'(EF09CO06) Analisar problemas sociais. / (EF09CO09) Criar ou utilizar conteúdo em meio digital considerando direitos autorais e uso de imagem.',`→ Aula dialogada sobre pós-guerra e criação da ONU
+→ Leitura sobre objetivos da organização
+→ Debate sobre paz, cooperação e direitos
+→ Leitura de trechos da Declaração dos Direitos Humanos`,`→ Pesquisa sobre atuação da ONU
+→ Painel digital
+→ Produção de cartaz, slide ou folder digital
+→ Discussão sobre uso ético de imagens e autoria`),
+      r('9º ano','3º bimestre','Modernização, Ditadura civil-militar e redemocratização: o Brasil após 1946.','Governo Dutra; segundo governo Vargas; governo JK; governos Jânio Quadros e João Goulart.',[h('EF09HI17','Identificar e analisar processos sociais, econômicos, culturais e políticos do Brasil a partir de 1946.'),h('EF09HI18','Descrever e analisar as relações entre as transformações urbanas e seus impactos na cultura brasileira entre 1946 e 1964 e na produção das desigualdades regionais e sociais.')],'(EF09CO10) Avaliar veracidade e relevância da informação. / (EF09CO07) Avaliar aplicações e implicações políticas, socioambientais e culturais das tecnologias digitais.',`→ Aula expositiva dialogada sobre o Brasil a partir de 1946
+→ Leitura sobre governo Dutra e contexto do pós-guerra
+→ Aula dialogada sobre urbanização e industrialização
+→ Debate sobre modernização e desigualdade`,`→ Pesquisa orientada em diferentes fontes
+→ Comparação entre texto didático, reportagem e vídeo
+→ Análise de imagens, mapas e gráficos
+→ Produção de infográfico digital`),
+      r('9º ano','3º bimestre','Modernização, Ditadura civil-militar e redemocratização: o Brasil após 1946.','A formação da ditadura brasileira.',[h('EF09HI19','Identificar e compreender o processo que resultou na ditadura civil-militar no Brasil e discutir a emergência de questões relacionadas à memória e à justiça sobre os casos de violação dos direitos humanos.')],'(EF09CO10) Avaliar veracidade, credibilidade e relevância da informação.',`→ Aula expositiva sobre o golpe civil-militar de 1964
+→ Leitura sobre autoritarismo, repressão e violações
+→ Debate sobre memória, justiça e democracia
+→ Produção de esquema`,`→ Pesquisa sobre o golpe de 1964 e memória da ditadura
+→ Comparação entre fontes históricas, vídeos e reportagens
+→ Produção de texto digital
+→ Quiz para fixar assunto`),
+      r('9º ano','3º bimestre','Modernização, Ditadura civil-militar e redemocratização: o Brasil após 1946.','Os anos de chumbo e as resistências culturais e armadas; Guerrilha do Araguaia.',[h('EF09HI20','Discutir os processos de resistência e as propostas de reorganização da sociedade brasileira durante a ditadura civil-militar.')],'(EF09CO10) Avaliar veracidade, credibilidade e relevância da informação.',`→ Aula dialogada sobre resistência cultural, política e armada
+→ Leitura sobre censura, repressão e oposição
+→ Debate sobre formas de resistência
+→ Produção de quadro comparativo`,`→ Pesquisa sobre movimentos de resistência e Guerrilha do Araguaia
+→ Comparação entre materiais digitais
+→ Produção de painel no Padlet por tipos de resistência`),
+      r('9º ano','3º bimestre','Modernização, Ditadura civil-militar e redemocratização: o Brasil após 1946.','Comunidades indígenas e quilombolas sobre as políticas militares.',[h('EF09HI21','Identificar e relacionar as demandas indígenas e quilombolas como forma de contestação ao modelo desenvolvimentista da ditadura.')],'(EF69CO11) Apresentar conduta e linguagem apropriadas ao se comunicar em ambiente digital.',`→ Aula expositiva sobre políticas desenvolvimentistas
+→ Leitura e análise de exemplos históricos
+→ Debate sobre direitos territoriais, resistência e exclusão`,`→ Pesquisa sobre comunidades indígenas e quilombolas
+→ Discussão sobre respeito e ética
+→ Produção de mural digital`),
+      r('9º ano','3º bimestre','Modernização, Ditadura civil-militar e redemocratização: o Brasil após 1946.','A abertura política de 1979: anistia e dinâmica eleitoral.',[h('EF09HI07MB','Discutir o processo de abertura de 1979 e analisar as ações políticas do governo militar.')],'(EF09CO06) Analisar problemas sociais de sua cidade e estado a partir de ambientes digitais.',`→ Aula dialogada sobre abertura política, anistia e reorganização da vida pública
+→ Leitura sobre ações do governo militar
+→ Debate sobre limites e avanços da abertura
+→ Produção de resumo`,`→ Pesquisa sobre anistia, abertura e eleições
+→ Organização das informações em quadro digital
+→ Produção de apresentação digital`),
+      r('9º ano','3º bimestre','Modernização, Ditadura civil-militar e redemocratização: o Brasil após 1946.','As Diretas Já e a Constituição de 1988; transformações após 1989; lideranças e organizações civis.',[h('EF09HI22','Discutir o papel da mobilização da sociedade brasileira do final do período ditatorial até a Constituição de 1988.'),h('EF09HI23','Identificar direitos civis, políticos e sociais expressos na Constituição de 1988 e relacioná-los à noção de cidadania e ao pacto da sociedade brasileira de combate a diversas formas de preconceito, como o racismo.'),h('EF09HI24','Analisar as transformações políticas, econômicas, sociais e culturais de 1989 aos dias atuais, identificando questões prioritárias para a promoção da cidadania e dos valores democráticos.'),h('EF09HI25','Relacionar as transformações da sociedade brasileira aos protagonismos da sociedade civil após 1989.')],'(EF09CO09) Criar ou utilizar conteúdo em meio digital. / (EF69CO11) Apresentar conduta e linguagem apropriadas. / (EF09CO06) Analisar problemas sociais.',`→ Aula expositiva sobre Diretas Já, mobilização popular e redemocratização
+→ Leitura de trechos da Constituição
+→ Debate sobre cidadania, democracia e valores democráticos
+→ Aula dialogada sobre sociedade civil após 1989`,`→ Pesquisa sobre Diretas Já e Constituição de 1988
+→ Cartaz ou slide digital
+→ Pesquisa sobre direitos constitucionais e cidadania
+→ Painel digital sobre problemas sociais e protagonismo da sociedade civil`),
+      r('9º ano','3º bimestre','Modernização, Ditadura civil-militar e redemocratização: o Brasil após 1946.','As minorias em pauta; marginalização e desigualdade social; globalização.',[h('EF09HI26','Discutir e analisar as causas da violência contra populações marginalizadas (negros, indígenas, mulheres, homossexuais, camponeses, pobres etc.) com vistas à tomada de consciência e à construção de uma cultura de paz, empatia e respeito às pessoas.'),h('EF09HI08MB','Compreender o processo de marginalização, desigualdade social e violência de Estado.'),h('EF09HI27','Relacionar aspectos das mudanças econômicas, culturais e sociais ocorridas no Brasil a partir da década de 1990 ao papel do País no cenário internacional na era da globalização.')],'(EF69CO11) Apresentar conduta e linguagem apropriadas. / (EF09CO07) Avaliar implicações das tecnologias digitais. / (EF69CO12) Analisar consumo de tecnologia.',`→ Aula dialogada sobre violência, exclusão e marginalização
+→ Debate sobre preconceito, intolerância e cultura de paz
+→ Leitura sobre desigualdade social e violência de Estado
+→ Aula sobre globalização e transformações no Brasil`,`→ Análise orientada de discursos e comentários digitais
+→ Produção de cartaz digital sobre cultura de paz
+→ Pesquisa sobre desigualdade social
+→ Infográfico digital sobre o Brasil na globalização`),
+      r('9º ano','4º bimestre','Brasil e o mundo na história recente.','A Guerra Fria e a disputa entre capitalismo e socialismo em diversas regiões do globo.',[h('EF09HI28','Identificar e analisar aspectos da Guerra Fria, seus principais conflitos e as tensões geopolíticas no interior dos blocos liderados por soviéticos e estadunidenses.')],'(EF09CO10) Avaliar a veracidade, credibilidade e relevância da informação.',`→ Aula expositiva dialogada sobre Guerra Fria
+→ Leitura sobre capitalismo, socialismo e disputas geopolíticas
+→ Identificação dos principais conflitos
+→ Produção de esquema`,`→ Pesquisa orientada em fontes digitais
+→ Comparação entre mapas, vídeos e textos
+→ Construção de mapa interativo no Padlet`),
+      r('9º ano','4º bimestre','Brasil e o mundo na história recente.','Ditaduras latino-americanas alinhadas às políticas imperialistas estadunidense.',[h('EF09HI29','Descrever e analisar as experiências ditatoriais na América Latina, seus procedimentos e vínculos com o poder, em nível nacional e internacional, e a atuação de movimentos de contestação às ditaduras.')],'(EF09CO06) Analisar problemas sociais de sua cidade e estado a partir de ambientes digitais.',`→ Aula dialogada sobre ditaduras latino-americanas
+→ Leitura sobre repressão, censura e vínculos internacionais
+→ Debate sobre autoritarismo e resistência
+→ Quadro comparativo`,`→ Pesquisa sobre experiências ditatoriais
+→ Organização em tabela ou painel digital
+→ Painel comparativo no Padlet`),
+      r('9º ano','4º bimestre','Brasil e o mundo na história recente.','Ditaduras latino-americanas: censura, opressão e políticas econômicas liberais.',[h('EF09HI30','Comparar as características dos regimes ditatoriais latino-americanos, com especial atenção para a censura política, a opressão e o uso da força, bem como para as reformas econômicas e sociais e seus impactos.')],'(EF09CO10) Avaliar veracidade, credibilidade e relevância da informação.',`→ Aula expositiva sobre censura, opressão e reformas econômicas
+→ Leitura de texto histórico
+→ Debate sobre impactos sociais, políticos e econômicos
+→ Quadro comparativo`,`→ Pesquisa em diferentes fontes
+→ Comparação entre materiais com versões e enfoques diferentes
+→ Produção de texto digital comparativo`),
+      r('9º ano','4º bimestre','Brasil e o mundo na história recente.','Descolonização da África e da Ásia: expressões pós-coloniais.',[h('EF09HI31','Descrever e avaliar os processos de descolonização na África e na Ásia.')],'(EF09CO07) Avaliar aplicações e implicações políticas, socioambientais e culturais das tecnologias digitais.',`→ Aula expositiva sobre descolonização
+→ Leitura sobre independências e lutas anticoloniais
+→ Debate sobre permanências coloniais
+→ Produção de esquema`,`→ Pesquisa sobre casos de descolonização
+→ Análise de mapas, vídeos e textos digitais
+→ Produção de apresentação digital`),
+      r('9º ano','4º bimestre','Brasil e o mundo na história recente.','O fenômeno da globalização: mudanças e permanências.',[h('EF09HI32','Analisar mudanças e permanências associadas ao processo de Globalização, considerando os argumentos dos movimentos críticos às políticas globais.')],'(EF69CO12) Analisar o consumo de tecnologia na sociedade.',`→ Aula dialogada sobre globalização
+→ Leitura sobre mudanças e permanências
+→ Debate sobre vantagens, problemas e críticas
+→ Produção de quadro no caderno`,`→ Pesquisa sobre globalização e consumo de tecnologia
+→ Análise de exemplos do cotidiano
+→ Produção de infográfico digital`),
+      r('9º ano','4º bimestre','Brasil e o mundo na história recente.','As tecnologias digitais de informação e comunicação.',[h('EF09HI33','Analisar as transformações nas relações políticas locais e globais geradas pelo desenvolvimento das tecnologias digitais de informação e comunicação.')],'(EF09CO10) Avaliar veracidade, credibilidade e relevância da informação.',`→ Aula expositiva sobre tecnologias digitais
+→ Leitura sobre mudanças políticas e sociais
+→ Debate sobre informação, poder e circulação de ideias`,`→ Pesquisa sobre redes digitais, comunicação e política
+→ Análise de diferentes formatos de informação digital
+→ Painel digital com exemplos`),
+      r('9º ano','4º bimestre','Brasil e o mundo na história recente.','As políticas econômicas em países da América Latina e os impactos sociais em seus respectivos territórios.',[h('EF09HI34','Discutir as motivações da adoção de diferentes políticas econômicas na América Latina, assim como seus impactos sociais nos países da região.')],'(EF09CO07) Avaliar aplicações e implicações políticas, socioambientais e culturais das tecnologias digitais.',`→ Aula dialogada sobre políticas econômicas na América Latina
+→ Leitura sobre reformas econômicas e impactos sociais
+→ Debate sobre desigualdade, trabalho e desenvolvimento
+→ Quadro com políticas e consequências`,`→ Pesquisa sobre políticas econômicas em países latino-americanos
+→ Organização em tabela digital
+→ Apresentação digital comparativa`),
+      r('9º ano','4º bimestre','Brasil e o mundo na história recente.','Movimentos terroristas, processos migratórios e choques culturais na contemporaneidade.',[h('EF09HI35','Analisar os aspectos relacionados ao fenômeno do terrorismo na contemporaneidade, incluindo os movimentos migratórios e os choques entre diferentes grupos e culturas.')],'(EF69CO11) Apresentar conduta e linguagem apropriadas ao se comunicar em ambiente digital.',`→ Aula expositiva sobre terrorismo, migração e choques culturais
+→ Leitura sobre conflitos contemporâneos
+→ Debate sobre intolerância, medo e convivência entre culturas
+→ Síntese no caderno`,`→ Pesquisa orientada sobre movimentos migratórios e choques culturais
+→ Discussão sobre respeito e linguagem adequada
+→ Cartaz digital sobre convivência e diversidade`),
+      r('9º ano','4º bimestre','Brasil e o mundo na história recente.','Diversidade cultural global e combate ao preconceito, intolerância e violência.',[h('EF09HI36','Identificar e discutir as diversidades identitárias e seus significados históricos no início do século XXI, combatendo qualquer forma de preconceito e violência.')],'(EF69CO11) Apresentar conduta e linguagem apropriadas ao se comunicar em ambiente digital.',`→ Aula dialogada sobre diversidade, identidade e preconceito no século XXI
+→ Leitura e análise de situações de discriminação
+→ Debate sobre violência, intolerância e respeito às diferenças
+→ Produção de texto reflexivo`,`→ Análise orientada de campanhas e materiais digitais
+→ Discussão sobre linguagem respeitosa
+→ Elaboração de mensagem coletiva de combate ao preconceito
+→ Quiz de verdadeiro ou falso`)
+    ];
+
+    function montarPlano(registros) {
+      const plano = {};
+      registros.forEach(item => {
+        if (!plano[item.serie]) plano[item.serie] = {};
+        if (!plano[item.serie][item.bimestre]) plano[item.serie][item.bimestre] = {};
+        if (!plano[item.serie][item.bimestre][item.unidade]) plano[item.serie][item.bimestre][item.unidade] = [];
+        plano[item.serie][item.bimestre][item.unidade].push(item);
+      });
+      return plano;
+    }
+
+    const planoAnual = montarPlano(registrosPlano);
+
+    function inicializar() {
+      const serieSelect = document.getElementById('serie');
+      Object.keys(planoAnual).forEach(serie => serieSelect.innerHTML += `<option value="${serie}">${serie}</option>`);
+
+      document.getElementById('competenciasGerais').innerHTML = competencias.map(c => `
+        <label class="check-item"><input type="checkbox" value="${c}" onchange="atualizarPreview()"> ${c}</label>
+      `).join('');
+
+      document.getElementById('aulasCampos').innerHTML = Array.from({ length: 8 }, (_, i) => `
+        <label>${i + 1}. Aula</label>
+        <textarea id="aula${i + 1}" placeholder="Descreva a aula ${i + 1}..." oninput="atualizarPreview()"></textarea>
+      `).join('');
+
+      atualizarPreview();
+    }
+
+    function valor(id) { const el = document.getElementById(id); return el && el.value.trim() ? el.value.trim() : ''; }
+    function textoOuLinha(texto) { return texto ? texto : '<span class="placeholder">______________________________________________________________________________________________</span>'; }
+    function dataFormatada() { const d = valor('data'); if (!d) return '_____/_____/_____'; const [ano, mes, dia] = d.split('-'); return `${dia}/${mes}/${ano}`; }
+
+    function carregarBimestres() {
+      const serie = valor('serie');
+      carregarComputacaoOpcoes();
+      const bimestre = document.getElementById('bimestre');
+      bimestre.innerHTML = '<option value="">Selecione</option>';
+      limparSelect('unidade', 'Selecione o bimestre');
+      limparSelect('objeto', 'Selecione a unidade temática');
+      document.getElementById('habilidadesArea').innerHTML = '';
+      if (!serie) return;
+      Object.keys(planoAnual[serie]).forEach(b => bimestre.innerHTML += `<option value="${b}">${b}</option>`);
+    }
+
+    function carregarUnidades() {
+      const serie = valor('serie');
+      const bimestre = valor('bimestre');
+      const unidade = document.getElementById('unidade');
+      unidade.innerHTML = '<option value="">Selecione</option>';
+      limparSelect('objeto', 'Selecione a unidade temática');
+      document.getElementById('habilidadesArea').innerHTML = '';
+      if (!serie || !bimestre) return;
+      Object.keys(planoAnual[serie][bimestre]).forEach(u => unidade.innerHTML += `<option value="${u}">${u}</option>`);
+    }
+
+    function carregarObjetos() {
+      const serie = valor('serie');
+      const bimestre = valor('bimestre');
+      const unidade = valor('unidade');
+      const objeto = document.getElementById('objeto');
+      objeto.innerHTML = '<option value="">Selecione</option>';
+      document.getElementById('habilidadesArea').innerHTML = '';
+      if (!serie || !bimestre || !unidade) return;
+      planoAnual[serie][bimestre][unidade].forEach((item, index) => objeto.innerHTML += `<option value="${index}">${item.objeto}</option>`);
+    }
+
+    function limparSelect(id, texto) { document.getElementById(id).innerHTML = `<option value="">${texto}</option>`; }
+
+    function carregarComputacaoOpcoes() {
+      const serie = valor('serie');
+      const select = document.getElementById('computacaoSelect');
+      if (!select) return;
+
+      select.innerHTML = '<option value="">Automático do plano anual</option>';
+
+      const adicionarGrupo = (titulo, lista) => {
+        const grupo = document.createElement('optgroup');
+        grupo.label = titulo;
+        lista.forEach(([codigo, texto]) => {
+          const option = document.createElement('option');
+          option.value = `(${codigo}) ${texto}`;
+          option.textContent = `(${codigo}) ${texto}`;
+          grupo.appendChild(option);
+        });
+        select.appendChild(grupo);
+      };
+
+      if (serie && habilidadesComputacao[serie]) adicionarGrupo(serie, habilidadesComputacao[serie]);
+      adicionarGrupo('Por etapa - 6º ao 9º ano', habilidadesComputacao['6º ao 9º ano']);
+    }
+
+    function itemSelecionado() {
+      const serie = valor('serie');
+      const bimestre = valor('bimestre');
+      const unidade = valor('unidade');
+      const idx = valor('objeto');
+      if (!serie || !bimestre || !unidade || idx === '') return null;
+      return planoAnual[serie][bimestre][unidade][Number(idx)];
+    }
+
+    function carregarHabilidades() {
+      const item = itemSelecionado();
+      const area = document.getElementById('habilidadesArea');
+      area.innerHTML = '';
+      if (!item) { atualizarPreview(); return; }
+
+      if (!valor('avaliacao')) document.getElementById('avaliacao').value = item.avaliacao || avaliacaoPadrao;
+
+      area.innerHTML = item.habilidades.map((hab, index) => `
+        <div class="skill-box">
+          <label class="check-item">
+            <input type="checkbox" class="habilidade-check" data-codigo="${hab.codigo}" data-texto="${escapeAttr(hab.texto)}" checked onchange="toggleDetalhesHabilidade(${index}); atualizarPreview();">
+            <span><strong>${hab.codigo}</strong> - ${hab.texto}</span>
+          </label>
+          <div id="detalheHab${index}" style="display:block; margin-top:10px;">
+            <div class="skill-title">Metodologias para ${hab.codigo}</div>
+            <label>Metodologia desplugada</label>
+            <textarea class="desplugada" data-codigo="${hab.codigo}" oninput="atualizarPreview()">${item.desplugada}</textarea>
+            <label>Metodologia plugada</label>
+            <textarea class="plugada" data-codigo="${hab.codigo}" oninput="atualizarPreview()">${item.plugada}</textarea>
+          </div>
+        </div>
+      `).join('');
+      aplicarMetodologiaPlugadaPorComputacao(false);
+      atualizarPreview();
+    }
+
+    function extrairCodigoComputacao(texto) {
+      const match = String(texto || '').match(/[(](EF[0-9]{2}CO[0-9]{2}|EF69CO[0-9]{2})[)]/);
+      return match ? match[1] : '';
+    }
+
+    function buscarMetodologiaPlugadaPorComputacao(codigo) {
+      const itemAtual = itemSelecionado();
+      const serie = valor('serie');
+      const bimestre = valor('bimestre');
+
+      if (!codigo) return itemAtual ? itemAtual.plugada : '';
+
+      if (itemAtual && itemAtual.computacao && itemAtual.computacao.includes(codigo)) {
+        return itemAtual.plugada;
+      }
+
+      const candidatos = registrosPlano.filter(registro =>
+        registro.serie === serie &&
+        registro.bimestre === bimestre &&
+        registro.computacao &&
+        registro.computacao.includes(codigo)
+      );
+
+      if (candidatos.length) return candidatos[0].plugada;
+      return itemAtual ? itemAtual.plugada : '';
+    }
+
+    function aplicarMetodologiaPlugadaPorComputacao(atualizar = true) {
+      const codigoSelecionado = extrairCodigoComputacao(valor('computacaoSelect'));
+      const plugadaRelacionada = buscarMetodologiaPlugadaPorComputacao(codigoSelecionado);
+
+      document.querySelectorAll('.plugada').forEach(campo => {
+        campo.value = plugadaRelacionada;
+      });
+
+      if (atualizar) atualizarPreview();
+    }
+
+    function escapeAttr(texto) {
+      return String(texto).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function toggleDetalhesHabilidade(index) {
+      const box = document.getElementById(`detalheHab${index}`);
+      const check = document.querySelectorAll('.habilidade-check')[index];
+      if (box && check) box.style.display = check.checked ? 'block' : 'none';
+    }
+
+    function habilidadesSelecionadas() {
+      return [...document.querySelectorAll('.habilidade-check:checked')].map(check => {
+        const codigo = check.dataset.codigo;
+        return {
+          codigo,
+          texto: check.dataset.texto || 'Texto da habilidade não informado.',
+          desplugada: document.querySelector(`.desplugada[data-codigo="${codigo}"]`)?.value.trim() || '',
+          plugada: document.querySelector(`.plugada[data-codigo="${codigo}"]`)?.value.trim() || ''
+        };
+      });
+    }
+
+    function atualizarPreview() {
+      const comps = [...document.querySelectorAll('#competenciasGerais input:checked')].map(c => c.value);
+      const habilidades = habilidadesSelecionadas();
+      const item = itemSelecionado();
+      const computacaoTexto = valor('computacaoSelect') || (item ? item.computacao : '');
+      const competenciasTexto = competencias.map(c => `(${comps.includes(c) ? 'X' : ' '}) ${c};`).join(' ');
+      const habilidadesTextoPreview = habilidades.length ? habilidades.map(h => `<strong>${h.codigo}</strong> - ${h.texto}`).join('<br>') : '';
+      const metodoPreview = habilidades.length ? habilidades.map(h => `
+        <div style="margin-bottom:8px;"><strong>${h.codigo}</strong><br>
+        <strong>Metodologia desplugada:</strong> ${textoOuLinha(h.desplugada)}<br>
+        <strong>Metodologia plugada:</strong> ${textoOuLinha(h.plugada)}</div>
+      `).join('') : '';
+      const aulasPreview = Array.from({ length: 8 }, (_, i) => `<div class="aula-box"><strong>${i + 1}. Aula</strong><span class="wide-line">${textoOuLinha(valor(`aula${i + 1}`))}</span></div>`).join('');
+
+      document.getElementById('previewConteudo').innerHTML = `
+        <div class="doc-line"><span class="doc-label">EMEF</span> <span class="line-fill" style="min-width:500px;">${textoOuLinha(valor('escola'))}</span></div>
+        <div class="doc-line"><span class="doc-label">Professor(a):</span> <span class="line-fill" style="min-width:460px;">${textoOuLinha(valor('professor'))}</span></div>
+        <div class="doc-line"><span class="doc-label">Ano/Série:</span> <span class="line-fill">${textoOuLinha(valor('serie'))}</span> <span class="doc-label">Bimestre:</span> <span class="line-fill">${textoOuLinha(valor('bimestre'))}</span> <span class="doc-label">Tempo de duração:</span> <span class="line-fill">${textoOuLinha(valor('duracao'))}</span></div>
+        <div class="doc-line"><span class="doc-label">Nº. de alunos previstos:</span> <span class="line-fill">${textoOuLinha(valor('previstos'))}</span> <span class="doc-label">Nº. de alunos presentes:</span> <span class="line-fill">${textoOuLinha(valor('presentes'))}</span> <span class="doc-label">Data:</span> <span class="line-fill">${dataFormatada()}</span></div>
+        <div class="section"><span class="section-title">Componente Curricular:</span><span class="wide-line">${textoOuLinha(valor('componente'))}</span></div>
+        <div class="section"><span class="section-title">Tema:</span><span class="wide-line">${textoOuLinha(valor('tema'))}</span></div>
+        <div class="section"><span class="section-title">Competência Geral:</span><div class="competencias">${competenciasTexto}</div></div>
+        <div class="section"><span class="section-title">Competência Específica:</span><span class="wide-line">${textoOuLinha(valor('competenciaEspecifica'))}</span></div>
+        <div class="section"><span class="section-title">Unidade Temática/Prática de Linguagem:</span><span class="wide-line">${textoOuLinha(valor('unidade'))}</span></div>
+        <div class="section"><span class="section-title">Objeto(s) de Conhecimento:</span><span class="wide-line">${textoOuLinha(item ? item.objeto : '')}</span></div>
+        <div class="section"><span class="section-title">Habilidades:</span><span class="wide-line">${textoOuLinha(habilidadesTextoPreview)}</span></div>
+        <div class="section"><span class="section-title">Habilidades da BNCC da Computação:</span><span class="wide-line">${textoOuLinha(computacaoTexto)}</span></div>
+        <div class="section"><span class="section-title">Objetivos de Aprendizagem:</span><span class="wide-line">${textoOuLinha(valor('objetivos'))}</span></div>
+        <div class="section"><span class="section-title">Materiais a serem utilizados:</span><span class="wide-line">${textoOuLinha(valor('materiais'))}</span></div>
+        <div class="section"><span class="section-title">Procedimentos Metodológicos</span><br><span style="font-size:11px;">Descrição e adequação das atividades, considerando os níveis de conhecimento dos alunos; adaptação curricular caso haja aluno com deficiência; organização das interações e possíveis intervenções.</span><span class="wide-line">${textoOuLinha(valor('procedimentos'))}</span></div>
+        <div class="section"><span class="section-title">Metodologias por habilidade:</span><span class="wide-line">${textoOuLinha(metodoPreview)}</span></div>
+        <div class="section"><span class="section-title">Avaliação</span><br><span style="font-size:11px;">Como verificar as habilidades e competências a serem alcançadas pelo aluno nas atividades propostas.</span><span class="wide-line">${textoOuLinha(valor('avaliacao'))}</span></div>
+        <div class="section" style="page-break-before: always; margin-top:20px;"><div class="doc-header">PREFEITURA DE MARABÁ<br>SECRETARIA MUNICIPAL DE EDUCAÇÃO<br>DIRETORIA GERAL DE ENSINO - DIGEN<br>DIRETORIA DE ENSINO URBANO – DEN<br>COORDENADORIA DE SEGMENTO 6º AO 9º ANO</div><span class="section-title">Decomposição da habilidade:</span><br><span style="font-size:11px;">Trabalhar os diferentes objetivos que compõem uma habilidade do plano de curso, transformando-os em sucessivas aulas com o intuito de desenvolver o conhecimento proposto por completo.</span><div style="margin-top:12px;">${aulasPreview}</div></div>
+      `;
+    }
+
+    function exportarWord() {
+      atualizarPreview();
+      const conteudo = document.getElementById('documento').innerHTML;
+      const html = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Planejamento de Atividade</title><style>body{font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.35}.doc-header{text-align:center;font-weight:bold;text-transform:uppercase}.doc-title{text-align:center;font-weight:bold;margin:14px 0}.doc-label,.section-title{font-weight:bold;text-transform:uppercase}.wide-line{display:block;border-bottom:1px solid #222;min-height:18px;padding:2px 4px}.line-fill{border-bottom:1px solid #222;display:inline-block;min-width:120px;padding:0 4px}.section{margin-top:12px}</style></head><body>${conteudo}</body></html>`;
+      const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'planejamento_de_atividade_historia.doc';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function limparFormulario() {
+      if (!confirm('Deseja limpar todo o formulário?')) return;
+      document.querySelectorAll('input, textarea, select').forEach(el => {
+        if (el.type === 'checkbox') el.checked = false;
+        else if (el.id === 'componente') el.value = 'História';
+        else el.value = '';
+      });
+      carregarBimestres();
+      atualizarPreview();
+    }
+
+    inicializar();
+  </script>
+</body>
+</html>
